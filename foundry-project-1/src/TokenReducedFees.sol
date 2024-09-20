@@ -11,14 +11,17 @@ import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
+struct poolConfig {
+    address tokenAddress;
+    address owner;
+    uint24 regularFees;
+    uint24 reducedFees;
+}
+
 contract Counter is BaseHook {
     using PoolIdLibrary for PoolKey;
 
-    mapping(PoolId => uint256 count) public beforeSwapCount;
-    mapping(PoolId => uint256 count) public afterSwapCount;
-
-    mapping(PoolId => uint24) public regularFees;
-    mapping(PoolId => uint24) public reducedFees;
+    mapping(PoolId => poolConfig) public pools;
 
     constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
@@ -31,13 +34,13 @@ contract Counter is BaseHook {
         return
             Hooks.Permissions({
                 beforeInitialize: false,
-                afterInitialize: false,
-                beforeAddLiquidity: true,
+                afterInitialize: true,
+                beforeAddLiquidity: false,
                 afterAddLiquidity: false,
                 beforeRemoveLiquidity: true,
                 afterRemoveLiquidity: false,
                 beforeSwap: true,
-                afterSwap: true,
+                afterSwap: false,
                 beforeDonate: false,
                 afterDonate: false,
                 beforeSwapReturnDelta: false,
@@ -47,48 +50,42 @@ contract Counter is BaseHook {
             });
     }
 
-    function setPoolFees(
+    function setPoolConfig(
         PoolKey calldata key,
         uint24 _regularFees,
-        uint24 _reducedFees
+        uint24 _reducedFees,
+        address _tokenAddress
     ) external {
-        // Note: In a production setting, you'd want to add access control here
         PoolId poolId = key.toId();
-        regularFees[poolId] = _regularFees;
-        reducedFees[poolId] = _reducedFees;
+        pools[poolId].regularFees = _regularFees;
+        pools[poolId].reducedFees = _reducedFees;
+        pools[poolId].tokenAddress = _tokenAddress;
     }
 
     function beforeSwap(
         address sender,
         PoolKey calldata key,
         IPoolManager.SwapParams calldata,
-        bytes calldata,
-        address tokenAddress
-    )
-        external
-        returns (
-            // override
-            bytes4,
-            BeforeSwapDelta,
-            uint24
-        )
-    {
+        bytes calldata
+    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
 
-        IERC20 token = IERC20(tokenAddress);
+        poolConfig memory pool = pools[poolId];
+
+        IERC20 token = IERC20(pool.tokenAddress);
         uint256 senderBalance = token.balanceOf(sender);
 
         if (senderBalance > 0) {
             return (
                 BaseHook.beforeSwap.selector,
                 BeforeSwapDeltaLibrary.ZERO_DELTA,
-                reducedFees[poolId]
+                pool.reducedFees
             );
         } else {
             return (
                 BaseHook.beforeSwap.selector,
                 BeforeSwapDeltaLibrary.ZERO_DELTA,
-                regularFees[poolId]
+                pool.regularFees
             );
         }
     }

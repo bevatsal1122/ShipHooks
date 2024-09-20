@@ -11,14 +11,17 @@ import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
+struct poolConfig {
+    address tokenAddress;
+    address owner;
+    uint24 regularFees;
+    uint24 reducedFees;
+}
+
 contract Counter is BaseHook {
     using PoolIdLibrary for PoolKey;
 
-    mapping(PoolId => uint256 count) public beforeSwapCount;
-    mapping(PoolId => uint256 count) public afterSwapCount;
-
-    mapping(PoolId => uint256 count) public beforeAddLiquidityCount;
-    mapping(PoolId => uint256 count) public beforeRemoveLiquidityCount;
+    mapping(PoolId => poolConfig) public pools;
 
     constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
@@ -32,12 +35,12 @@ contract Counter is BaseHook {
             Hooks.Permissions({
                 beforeInitialize: false,
                 afterInitialize: false,
-                beforeAddLiquidity: true,
+                beforeAddLiquidity: false,
                 afterAddLiquidity: false,
-                beforeRemoveLiquidity: true,
+                beforeRemoveLiquidity: false,
                 afterRemoveLiquidity: false,
                 beforeSwap: true,
-                afterSwap: true,
+                afterSwap: false,
                 beforeDonate: false,
                 afterDonate: false,
                 beforeSwapReturnDelta: false,
@@ -47,22 +50,29 @@ contract Counter is BaseHook {
             });
     }
 
+    function setPoolConfig(
+        PoolKey calldata key,
+        uint24 _regularFees,
+        uint24 _reducedFees,
+        address _tokenAddress
+    ) external {
+        PoolId poolId = key.toId();
+        pools[poolId].regularFees = _regularFees;
+        pools[poolId].reducedFees = _reducedFees;
+        pools[poolId].tokenAddress = _tokenAddress;
+    }
+
     function beforeSwap(
         address sender,
-        PoolKey calldata,
+        PoolKey calldata key,
         IPoolManager.SwapParams calldata,
-        bytes calldata,
-        address tokenAddress
-    )
-        external
-        returns (
-            // override
-            bytes4,
-            BeforeSwapDelta,
-            uint24
-        )
-    {
-        IERC20 token = IERC20(tokenAddress);
+        bytes calldata
+    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+        PoolId poolId = key.toId();
+
+        poolConfig memory pool = pools[poolId];
+
+        IERC20 token = IERC20(pool.tokenAddress);
         uint256 senderBalance = token.balanceOf(sender);
 
         require(
