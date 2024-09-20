@@ -18,7 +18,7 @@ struct poolConfig {
     uint24 reducedFees;
 }
 
-contract Counter is BaseHook {
+contract TokenReducedFees is BaseHook {
     using PoolIdLibrary for PoolKey;
 
     mapping(PoolId => poolConfig) public pools;
