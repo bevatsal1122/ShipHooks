@@ -14,8 +14,6 @@ import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 struct poolConfig {
     address tokenAddress;
     address owner;
-    uint24 regularFees;
-    uint24 reducedFees;
 }
 
 contract Counter is BaseHook {
@@ -50,15 +48,29 @@ contract Counter is BaseHook {
             });
     }
 
+    function afterInitialize(
+        address sender,
+        PoolKey calldata key,
+        uint160,
+        int24,
+        bytes calldata hookData
+    ) external override returns (bytes4) {
+        ( address _tokenAddress ) = abi.decode(hookData, (address));
+        poolConfig memory pool = poolConfig({
+            tokenAddress: _tokenAddress,
+            owner: sender
+        });
+        PoolId poolId = key.toId();
+        pools[poolId] = pool;
+        return BaseHook.afterInitialize.selector;
+    }
+
+
     function setPoolConfig(
         PoolKey calldata key,
-        uint24 _regularFees,
-        uint24 _reducedFees,
         address _tokenAddress
     ) external {
         PoolId poolId = key.toId();
-        pools[poolId].regularFees = _regularFees;
-        pools[poolId].reducedFees = _reducedFees;
         pools[poolId].tokenAddress = _tokenAddress;
     }
 

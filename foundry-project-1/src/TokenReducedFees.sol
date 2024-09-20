@@ -50,6 +50,25 @@ contract Counter is BaseHook {
             });
     }
 
+    function afterInitialize(
+        address sender,
+        PoolKey calldata key,
+        uint160,
+        int24,
+        bytes calldata hookData
+    ) external override returns (bytes4) {
+        ( uint24 _regularFees, uint24 _reducedFees, address _tokenAddress ) = abi.decode(hookData, (uint24, uint24, address));
+        poolConfig memory pool = poolConfig({
+            tokenAddress: _tokenAddress,
+            owner: sender,
+            regularFees: _regularFees,
+            reducedFees: _reducedFees
+        });
+        PoolId poolId = key.toId();
+        pools[poolId] = pool;
+        return BaseHook.afterInitialize.selector;
+    }
+
     function setPoolConfig(
         PoolKey calldata key,
         uint24 _regularFees,
