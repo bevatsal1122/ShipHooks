@@ -13,11 +13,18 @@ interface IERC721 {
     function balanceOf(address owner) external view returns (uint256 balance);
 }
 
+struct PoolConfig {
+    address tokenAddress;
+    address owner;
+    bool isTokenGated;
+    uint256 requiredNFTBalance;
+}
+
 contract ERC721TokenGateHook is BaseHook {
     using PoolIdLibrary for PoolKey;
 
     IERC721 public immutable nftContract;
-    mapping(PoolId => bool) public isPoolTokenGated;
+    mapping(PoolId => PoolConfig) public pools;
 
     constructor(
         IPoolManager _poolManager,
@@ -51,9 +58,18 @@ contract ERC721TokenGateHook is BaseHook {
             });
     }
 
-    function setPoolTokenGated(PoolKey calldata key, bool isGated) external {
+    function setPoolConfig(
+        PoolKey calldata key,
+        address _tokenAddress,
+        bool _isTokenGated,
+        uint256 _requiredNFTBalance
+    ) external {
         // Note: In a production setting, you'd want to add access control here
-        isPoolTokenGated[key.toId()] = isGated;
+        PoolId poolId = key.toId();
+        pools[poolId].tokenAddress = _tokenAddress;
+        pools[poolId].owner = msg.sender;
+        pools[poolId].isTokenGated = _isTokenGated;
+        pools[poolId].requiredNFTBalance = _requiredNFTBalance;
     }
 
     function beforeSwap(
@@ -62,12 +78,18 @@ contract ERC721TokenGateHook is BaseHook {
         IPoolManager.SwapParams calldata,
         bytes calldata
     ) external override returns (bytes4, BeforeSwapDelta, uint24) {
-        if (isPoolTokenGated[key.toId()]) {
+        PoolId poolId = key.toId();
+        PoolConfig memory pool = pools[poolId];
+
+        require(pool.tokenAddress != address(0), "Pool not configured");
+
+        if (pool.isTokenGated) {
             require(
-                nftContract.balanceOf(sender) > 0,
-                "Sender must own at least one NFT to swap"
+                nftContract.balanceOf(sender) >= pool.requiredNFTBalance,
+                "Insufficient NFT balance for swap"
             );
         }
+
         return (
             BaseHook.beforeSwap.selector,
             BeforeSwapDeltaLibrary.ZERO_DELTA,
