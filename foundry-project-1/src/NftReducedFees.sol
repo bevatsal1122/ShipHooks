@@ -13,12 +13,18 @@ interface IERC721 {
     function balanceOf(address owner) external view returns (uint256 balance);
 }
 
+struct PoolConfig {
+    address tokenAddress;
+    address owner;
+    uint24 regularFees;
+    uint24 reducedFees;
+}
+
 contract ERC721ReducedFeesHook is BaseHook {
     using PoolIdLibrary for PoolKey;
 
     IERC721 public immutable nftContract;
-    mapping(PoolId => uint24) public regularFees;
-    mapping(PoolId => uint24) public reducedFees;
+    mapping(PoolId => PoolConfig) public pools;
 
     constructor(
         IPoolManager _poolManager,
@@ -52,15 +58,18 @@ contract ERC721ReducedFeesHook is BaseHook {
             });
     }
 
-    function setPoolFees(
+    function setPoolConfig(
         PoolKey calldata key,
         uint24 _regularFees,
-        uint24 _reducedFees
+        uint24 _reducedFees,
+        address _tokenAddress
     ) external {
         // Note: In a production setting, you'd want to add access control here
         PoolId poolId = key.toId();
-        regularFees[poolId] = _regularFees;
-        reducedFees[poolId] = _reducedFees;
+        pools[poolId].regularFees = _regularFees;
+        pools[poolId].reducedFees = _reducedFees;
+        pools[poolId].tokenAddress = _tokenAddress;
+        pools[poolId].owner = msg.sender;
     }
 
     function beforeSwap(
@@ -70,18 +79,21 @@ contract ERC721ReducedFeesHook is BaseHook {
         bytes calldata
     ) external override returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
+        PoolConfig memory pool = pools[poolId];
+
+        require(pool.tokenAddress != address(0), "Pool not configured");
 
         if (nftContract.balanceOf(sender) > 0) {
             return (
                 BaseHook.beforeSwap.selector,
                 BeforeSwapDeltaLibrary.ZERO_DELTA,
-                reducedFees[poolId]
+                pool.reducedFees
             );
         } else {
             return (
                 BaseHook.beforeSwap.selector,
                 BeforeSwapDeltaLibrary.ZERO_DELTA,
-                regularFees[poolId]
+                pool.regularFees
             );
         }
     }
