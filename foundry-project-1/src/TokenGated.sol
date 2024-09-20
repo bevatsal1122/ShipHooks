@@ -49,9 +49,9 @@ contract Counter is BaseHook {
 
     function beforeSwap(
         address sender,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
-        bytes calldata hookData,
+        PoolKey calldata,
+        IPoolManager.SwapParams calldata,
+        bytes calldata,
         address tokenAddress
     )
         external
