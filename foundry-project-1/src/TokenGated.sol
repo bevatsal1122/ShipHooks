@@ -10,13 +10,14 @@ import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import "./Constants";
 
 struct PoolConfig {
     address tokenAddress;
     address owner;
 }
 
-contract TokenGated is BaseHook {
+contract TokenGated is BaseHook, Constants {
     using PoolIdLibrary for PoolKey;
 
     mapping(PoolId => PoolConfig) public pools;
@@ -84,8 +85,6 @@ contract TokenGated is BaseHook {
         PoolConfig memory pool = pools[poolId];
 
         IERC20 token = IERC20(pool.tokenAddress);
-
-        // address sender1 = 0xB21B95E4343242Ed55be7E9ce34C9F2Bc97B4b09;
 
         uint256 senderBalance = token.balanceOf(sender);
 
