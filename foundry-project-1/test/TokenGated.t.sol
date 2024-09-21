@@ -44,6 +44,7 @@ contract TokenGatedTest is Test, Fixtures {
 
     address public user1;
     address public user2;
+    address public user3;
 
     function setUp() public {
         console.log("Entering setup");
@@ -122,7 +123,8 @@ contract TokenGatedTest is Test, Fixtures {
     }
 
     function testBeforeSwapWhenVoid() public {
-        vm.prank(user1);
+        user3 = vm.addr(3);
+        vm.startPrank(user3);
 
         bool zeroForOne = true;
         int256 amountSpecified = -1e18;
@@ -138,6 +140,8 @@ contract TokenGatedTest is Test, Fixtures {
             amountSpecified,
             ZERO_BYTES
         );
+
+        vm.stopPrank();
 
         // vm.expectRevert(
         //     "TokenGated testBeforeSwapWhenVoid(): Cannot swap if token balance is 0."
