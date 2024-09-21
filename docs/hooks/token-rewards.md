@@ -1,3 +1,13 @@
+# Token Rewards on Swap
+Distribute token rewards to users who swap in your pool. Keep the decided tokens to spend in the vault, 
+set the minimum swap amount and the amount of tokens to reward when that criteria is fulfilled.
+
+::: info
+Remember to approve this Hook's address from your Vault for spending of tokens.
+:::
+
+## Usage
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
@@ -152,3 +162,5 @@ contract TokenGated is BaseHook, Constants {
             );
     }
 }
+
+```
