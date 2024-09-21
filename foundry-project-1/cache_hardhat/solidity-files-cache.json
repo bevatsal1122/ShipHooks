@@ -980,8 +980,8 @@
       ]
     },
     "/Users/neelansh/Documents/programming/projects/ShipHooks/foundry-project-1/src/TokenGated.sol": {
-      "lastModificationDate": 1726943906531,
-      "contentHash": "d49563b72f378bf8f1043899f5763511",
+      "lastModificationDate": 1726945946119,
+      "contentHash": "b8e13f93d701dedd8ab674ffc4cb3ed0",
       "sourceName": "src/TokenGated.sol",
       "solcConfig": {
         "version": "0.8.27",
@@ -1015,6 +1015,7 @@
         "@uniswap/v4-core/src/types/PoolId.sol",
         "@uniswap/v4-core/src/types/BalanceDelta.sol",
         "@uniswap/v4-core/src/types/BeforeSwapDelta.sol",
+        "@uniswap/v4-core/src/libraries/LPFeeLibrary.sol",
         "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol",
         "./Constants.sol"
       ],
