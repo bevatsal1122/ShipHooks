@@ -42,7 +42,7 @@ contract TokenReducedFeesTest is Test, Fixtures {
     int24 tickUpper;
 
     // IERC20 public testToken;
-    address testToken = 0x7A7DEBcbAFC5aBC0E54b848D6FAE28b43202adC8;
+    address testToken = 0x6dD5D5CDB480E9a2c7b30272291868E919263f68;
 
     address public user1;
     address public user2;

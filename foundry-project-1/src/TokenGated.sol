@@ -10,7 +10,9 @@ import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {console} from 'forge-std/console.sol';
 import "./Constants.sol";
+import "./IUniversalRouter.sol";
 
 struct PoolConfig {
     address tokenAddress;
@@ -56,10 +58,11 @@ contract TokenGated is BaseHook, Constants {
         int24,
         bytes calldata hookData
     ) external override returns (bytes4) {
+        address user = getMsgSender(sender);
         address _tokenAddress = abi.decode(hookData, (address));
         PoolConfig memory pool = PoolConfig({
             tokenAddress: _tokenAddress,
-            owner: sender
+            owner: user
         });
         PoolId poolId = key.toId();
         pools[poolId] = pool;
@@ -79,14 +82,18 @@ contract TokenGated is BaseHook, Constants {
         PoolKey calldata key,
         IPoolManager.SwapParams calldata,
         bytes calldata
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+    ) external view override returns (bytes4, BeforeSwapDelta, uint24) {
+        address user = getMsgSender(sender);
+        
+        console.log(user);
+
         PoolId poolId = key.toId();
 
         PoolConfig memory pool = pools[poolId];
 
         IERC20 token = IERC20(pool.tokenAddress);
 
-        uint256 senderBalance = token.balanceOf(sender);
+        uint256 senderBalance = token.balanceOf(user);
 
         require(
             senderBalance > 0,

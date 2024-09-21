@@ -40,7 +40,7 @@ contract TokenGatedTest is Test, Fixtures {
     int24 tickUpper;
 
     // IERC20 public testToken;
-    address testToken = 0xFCcEAa75A086d8a1AF0626b3B3ac1f6A89347b2D;
+    address testToken = 0x6dD5D5CDB480E9a2c7b30272291868E919263f68;
 
     address public user1;
     address public user2;
