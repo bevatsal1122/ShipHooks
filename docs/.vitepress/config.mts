@@ -50,7 +50,10 @@ export default defineConfig({
       },
       {
         text: "Deployments",
-        items: [{ text: "Ethereum Sepolia", link: "/deployments/eth-sepolia" }],
+        items: [
+          { text: "Ethereum Sepolia", link: "/deployments/eth-sepolia" },
+          { text: "Test Tokens", link: "/deployments/test-tokens" }
+        ],
       },
     ],
     socialLinks: [
