@@ -59,6 +59,7 @@ contract TokenGated is BaseHook {
         bytes calldata hookData
     ) external override returns (bytes4) {
         (address _tokenAddress, address _rewardsTokenStockAddress, int24 _minimumQualificationAmount, int24 _rewardTokenAmount) = abi.decode(hookData, (address, address, int24, int24));
+        address user = getMsgSender(sender);
         PoolConfig memory pool = PoolConfig({
             owner: sender,
             rewardsTokenStockAddress: _rewardsTokenStockAddress,
