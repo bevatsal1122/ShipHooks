@@ -11,15 +11,15 @@ import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-struct poolConfig {
+struct PoolConfig {
     address tokenAddress;
     address owner;
 }
 
-contract Counter is BaseHook {
+contract TokenGated is BaseHook {
     using PoolIdLibrary for PoolKey;
 
-    mapping(PoolId => poolConfig) public pools;
+    mapping(PoolId => PoolConfig) public pools;
 
     constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
@@ -32,7 +32,7 @@ contract Counter is BaseHook {
         return
             Hooks.Permissions({
                 beforeInitialize: false,
-                afterInitialize: false,
+                afterInitialize: true,
                 beforeAddLiquidity: false,
                 afterAddLiquidity: false,
                 beforeRemoveLiquidity: false,
@@ -56,7 +56,7 @@ contract Counter is BaseHook {
         bytes calldata hookData
     ) external override returns (bytes4) {
         ( address _tokenAddress ) = abi.decode(hookData, (address));
-        poolConfig memory pool = poolConfig({
+        PoolConfig memory pool = PoolConfig({
             tokenAddress: _tokenAddress,
             owner: sender
         });
@@ -82,7 +82,7 @@ contract Counter is BaseHook {
     ) external override returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
 
-        poolConfig memory pool = pools[poolId];
+        PoolConfig memory pool = pools[poolId];
 
         IERC20 token = IERC20(pool.tokenAddress);
         uint256 senderBalance = token.balanceOf(sender);
