@@ -35,6 +35,12 @@ export default defineConfig({
           { text: 'Token-Gated Example', link: '/examples/token-gated-example' },
           { text: 'Reduced Fee Example', link: '/examples/reduced-fee-example' }
         ]
+      },
+      {
+        text: 'Utils',
+        items: [
+          { text: 'Constants', link: '/utils/constants' },
+        ]
       }
     ],
     socialLinks: [
