@@ -1,1 +1,1 @@
-forge create script/mocks/mUSDC.sol:MockUSDC --rpc-url https://eth-sepolia.g.alchemy.com/v2/s7T31oPGrY_VrwLVwRtcfCLO9Ag-7D4U --private-key 7fae503cb9b1b75d4a62b92283b27fcaf4a4c9170b41aabf1022321a31d80aa5
+forge create script/mocks/mUSDC.sol:MockUSDC --rpc-url https://base-sepolia.g.alchemy.com/v2/oYteDMJ7l6UpQoQN2KkpajI4nDQNbbLg --private-key 7fae503cb9b1b75d4a62b92283b27fcaf4a4c9170b41aabf1022321a31d80aa5
