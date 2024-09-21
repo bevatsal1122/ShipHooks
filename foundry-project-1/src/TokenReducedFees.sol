@@ -65,7 +65,7 @@ contract TokenReducedFees is BaseHook {
         bytes calldata hookData
     ) external override returns (bytes4) {
         address user = getMsgSender(sender);
-        
+
         (uint24 _regularFees, uint24 _reducedFees, address _tokenAddress) = abi
             .decode(hookData, (uint24, uint24, address));
 
