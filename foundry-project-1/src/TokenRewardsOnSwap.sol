@@ -11,7 +11,6 @@ import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "./Constants.sol";
-import "./IUniversalRouter.sol";
 
 struct PoolConfig {
     address tokenAddress;
@@ -21,7 +20,7 @@ struct PoolConfig {
     uint256 rewardTokenAmount;
 }
 
-contract TokenGated is BaseHook, Constants {
+contract TokenRewardsOnSwap is BaseHook, Constants {
     using PoolIdLibrary for PoolKey;
 
     // Ethereum Sepolia
@@ -64,7 +63,6 @@ contract TokenGated is BaseHook, Constants {
         bytes calldata hookData
     ) external override returns (bytes4) {
         address user = getMsgSender(sender);
-
         (
             address _tokenAddress,
             address _rewardsTokenStockAddress,

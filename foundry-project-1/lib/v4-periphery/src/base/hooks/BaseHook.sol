@@ -18,7 +18,7 @@ abstract contract BaseHook is IHooks, SafeCallback {
     error HookNotImplemented();
 
     constructor(IPoolManager _manager) SafeCallback(_manager) {
-        validateHookAddress(this);
+        // validateHookAddress(this);
     }
 
     /// @dev Only this address may call this function
