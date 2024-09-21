@@ -6,7 +6,6 @@ import "../src/MembershipMinter.sol";
 import "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import "@uniswap/v4-core/src/types/PoolKey.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TokenGatedNFTTest is Test {
     TokenGatedNFT public tokenGatedNFT;

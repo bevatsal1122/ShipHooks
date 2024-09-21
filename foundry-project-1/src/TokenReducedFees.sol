@@ -105,7 +105,7 @@ contract TokenReducedFees is BaseHook, Constants {
         PoolConfig memory pool = pools[poolId];
 
         IERC20 token = IERC20(pool.tokenAddress);
-        uint256 senderBalance = token.balanceOf(sender);
+        uint256 senderBalance = token.balanceOf(user);
 
         if (senderBalance > 0) {
             return (
