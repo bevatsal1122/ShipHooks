@@ -149,8 +149,7 @@ contract TokenGatedTest is Test, Fixtures {
         vm.expectRevert(
             "TokenGated testBeforeSwapWhenVoid(): Cannot swap if token balance is 0."
         );
-
-        console.log("After swap1212");
+        
 
         vm.stopPrank();
 
