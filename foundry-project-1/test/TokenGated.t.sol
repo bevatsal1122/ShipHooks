@@ -40,7 +40,7 @@ contract TokenGatedTest is Test, Fixtures {
     int24 tickUpper;
 
     // IERC20 public testToken;
-    address testToken = 0x7A7DEBcbAFC5aBC0E54b848D6FAE28b43202adC8;
+    address testToken = 0xFCcEAa75A086d8a1AF0626b3B3ac1f6A89347b2D;
 
     address public user1;
     address public user2;
@@ -49,7 +49,7 @@ contract TokenGatedTest is Test, Fixtures {
         console.log("Entering setup");
 
         // Setup test users
-        user1 = address(0x1);
+        user1 = address(0xB21B95E4343242Ed55be7E9ce34C9F2Bc97B4b09);
         user2 = address(0x2);
         vm.deal(user1, 100 ether);
         vm.deal(user2, 100 ether);
@@ -107,7 +107,7 @@ contract TokenGatedTest is Test, Fixtures {
     }
 
     function testPoolInitialization() public {
-        (address tokenAddress, address owner ) = hook.pools(poolId);
+        (address tokenAddress, address owner) = hook.pools(poolId);
         assertEq(tokenAddress, testToken);
     }
 
@@ -118,5 +118,36 @@ contract TokenGatedTest is Test, Fixtures {
 
         (address tokenAddress, address owner) = hook.pools(poolId);
         assertEq(tokenAddress, newTokenAddress);
+    }
+
+    function testBeforeSwapWhenVoid() public {
+        vm.prank(user1);
+
+        bool zeroForOne = true;
+        int256 amountSpecified = -1e18;
+
+        uint256 initialBalance = IERC20(testToken).balanceOf(user1);
+
+        console.log("initialBalance");
+        console.log(initialBalance);
+
+        BalanceDelta swapDelta = swap(
+            key,
+            zeroForOne,
+            amountSpecified,
+            ZERO_BYTES
+        );
+
+        vm.expectRevert("TokenGated testBeforeSwapWhenVoid(): Cannot swap if token balance is 0.");
+
+        // int256 finalBalance = int256(IERC20(testToken).balanceOf(user1));
+
+        // int256 expectedBalance = int256(initialBalance) + (amountSpecified);
+
+        // assertEq(
+        //     finalBalance,
+        //     expectedBalance,
+        //     "Final balance is not equal to expected balance"
+        // );
     }
 }
