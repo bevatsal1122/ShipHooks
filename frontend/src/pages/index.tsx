@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import Particles from "@/components/magicui/particles";
 import ConnectButton from "@/lib/ConnectWallet";
 import Navbar from "@/components/Navbar";
+import Meteors from "@/components/magicui/meteors";
 
 export default function Component() {
   const features = [
@@ -91,11 +92,12 @@ export default function Component() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
               >
-                <Card className="bg-white text-black cursor-pointer h-56 border-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-300 transform hover:scale-105">
+                <Card className="bg-gray-200 text-black cursor-pointer h-56 border-gray-800 hover:bg-gray-500 hover:text-black transition-all duration-300 transform hover:scale-105">
+                  <Meteors number={10} />
                   <CardHeader>
-                    <feature.icon className="w-12 h-12 mb-4 " />
+                    <feature.icon className="h-12 mb-4 items-center w-full" />
                     <CardTitle className="text-xl font-semibold">{feature.title}</CardTitle>
-                    <CardDescription className="">{feature.description}</CardDescription>
+                    <CardDescription>{feature.description}</CardDescription>
                   </CardHeader>
                 </Card>
               </motion.div>
