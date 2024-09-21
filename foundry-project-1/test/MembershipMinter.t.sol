@@ -5,8 +5,9 @@ import "forge-std/Test.sol";
 import "../src/MembershipMinter.sol";
 import "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import "@uniswap/v4-core/src/types/PoolKey.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "@uniswap/v4-core/src/types/PoolId.sol";
 
 contract TokenGatedNFTTest is Test {
     TokenGatedNFT public tokenGatedNFT;
@@ -126,7 +127,10 @@ contract TokenGatedNFTTest is Test {
 
 // Mock contracts for testing
 contract MockPoolManager is IPoolManager {
-    function getSlot0(PoolId) external pure override returns (Slot0) {}
+    function getSlot0(PoolId poolId) external pure override returns (Slot0) {
+        // Return a dummy Slot0 struct
+        return Slot0(0, 0, 0, 0, 0, false, 0);
+    }
     // Implement other required functions...
 }
 

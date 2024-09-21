@@ -5,11 +5,59 @@ import "forge-std/Test.sol";
 import "../src/NFTGated.sol";
 import "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import "@uniswap/v4-core/src/types/PoolKey.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+
 
 contract MockPoolManager is IPoolManager {
-    function getSlot0(PoolId) external pure override returns (Slot0) {}
-    // Implement other required functions...
+    function getSlot0(PoolId poolId) external pure override returns (Slot0) {
+        // Return a dummy Slot0 struct
+        return Slot0({
+            sqrtPriceX96: 0,
+            tick: 0,
+            protocolFee: 0,
+            swapFee: 0,
+            tickSpacing: 0,
+            hookData: false,
+            hookExtraData: 0
+        });
+    }
+
+    // Implement other required functions with minimal functionality
+    function initialize(PoolKey memory, uint160, bytes calldata) external returns (int24, int24, uint256) {
+        return (0, 0, 0);
+    }
+
+    function modifyPosition(PoolKey memory, IPoolManager.ModifyPositionParams memory, bytes calldata) external returns (BalanceDelta) {
+        return BalanceDelta(0, 0);
+    }
+
+    function swap(PoolKey memory, IPoolManager.SwapParams memory, bytes calldata) external returns (BalanceDelta) {
+        return BalanceDelta(0, 0);
+    }
+
+    function donate(PoolKey memory, uint256, uint256, bytes calldata) external returns (BalanceDelta) {
+        return BalanceDelta(0, 0);
+    }
+
+    function take(PoolKey memory, int256, int256, bytes calldata) external returns (BalanceDelta) {
+        return BalanceDelta(0, 0);
+    }
+
+    function settle(address) external payable returns (BalanceDelta) {
+        return BalanceDelta(0, 0);
+    }
+
+    function mint(address, uint256) external {}
+
+    function burn(uint256) external {}
+
+    function transfer(address, uint256) external pure returns (bool) {
+        return true;
+    }
+
+    function transferFrom(address, address, uint256) external pure returns (bool) {
+        return true;
+    }
 }
 
 contract MockNFT is ERC721 {

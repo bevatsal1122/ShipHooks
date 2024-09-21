@@ -80,7 +80,6 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
     function afterAddLiquidity(
         address sender,
         PoolKey calldata key,
-        IPoolManager.ModifyLiquidityParams calldata params,
         BalanceDelta delta,
         bytes calldata
     ) external returns (bytes4) {
