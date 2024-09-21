@@ -40,7 +40,7 @@ contract TokenGatedTest is Test, Fixtures {
     int24 tickUpper;
 
     // IERC20 public testToken;
-    address testToken = 0xe054a54585A403FD5B518339E761D6e1CAB40Bfa;
+    address testToken = 0x725E70b79c985b4E98A6C91c1F6dD7C4fe4FB667;
 
     address public user1;
     address public user2;
@@ -50,8 +50,8 @@ contract TokenGatedTest is Test, Fixtures {
         console.log("Entering setup");
 
         // Setup test users
-        user1 = address(0x1);
-        // user1 = 0xB21B95E4343242Ed55be7E9ce34C9F2Bc97B4b09;
+        // user1 = address(0x1);
+        user1 = address(0xB21B95E4343242Ed55be7E9ce34C9F2Bc97B4b09);
         user2 = address(0x2);
         vm.deal(user1, 100 ether);
         vm.deal(user2, 100 ether);
@@ -127,25 +127,36 @@ contract TokenGatedTest is Test, Fixtures {
         vm.startPrank(user3);
 
         bool zeroForOne = true;
-        int256 amountSpecified = -1e18;
+        int256 amountSpecified = 500;
 
         uint256 initialBalance = IERC20(testToken).balanceOf(user1);
 
-        console.log("initialBalance");
-        console.log(initialBalance);
+        uint256 res = IERC20(testToken).allowance(user1, address(manager));
 
-        BalanceDelta swapDelta = swap(
+        console.log("res");
+        console.log(res);
+
+        console.log("initialBalance");
+        console.log(initialBalance / 1e18);
+
+        swap(
             key,
             zeroForOne,
             amountSpecified,
             ZERO_BYTES
         );
 
+        vm.expectRevert(
+            "TokenGated testBeforeSwapWhenVoid(): Cannot swap if token balance is 0."
+        );
+
+        console.log("After swap1212");
+
         vm.stopPrank();
 
-        // vm.expectRevert(
-        //     "TokenGated testBeforeSwapWhenVoid(): Cannot swap if token balance is 0."
-        // );
+        vm.expectRevert(
+            "TokenGated testBeforeSwapWhenVoid(): Cannot swap if token balance is 0."
+        );
 
         // int256 finalBalance = int256(IERC20(testToken).balanceOf(user1));
 

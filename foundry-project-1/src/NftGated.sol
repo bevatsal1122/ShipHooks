@@ -9,7 +9,6 @@ import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
-import {console} from "forge-std/console.sol";
 import "./Constants.sol";
 import "./IUniversalRouter.sol";
 
@@ -90,8 +89,6 @@ contract NFTGated is BaseHook, Constants {
         bytes calldata
     ) external view override returns (bytes4, BeforeSwapDelta, uint24) {
         address user = getMsgSender(sender);
-
-        console.log(user);
 
         PoolId poolId = key.toId();
 
