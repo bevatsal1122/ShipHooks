@@ -120,13 +120,13 @@ export default function SwapPage() {
             </Select>
           </div>
         </div>
-        {/* <Button
+        <Button
           className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xl font-bold py-6 rounded-xl transition-all duration-300 transform hover:scale-105"
           size="lg"
         >
-          Get started
+          Swap
         </Button>
-        <p className="text-center text-base text-gray-400 mt-6"></p> */}
+        {/* <p className="text-center text-base text-gray-400 mt-6"></p> */}
       </div>
     </div>
   );
