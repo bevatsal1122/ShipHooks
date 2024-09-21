@@ -19,6 +19,14 @@ import {IPositionManager} from "v4-periphery/src/interfaces/IPositionManager.sol
 import {EasyPosm} from "./utils/EasyPosm.sol";
 import {Fixtures} from "./utils/Fixtures.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import { console} from "forge-std/console.sol";
+
+struct poolConfig {
+    address tokenAddress;
+    address owner;
+    uint24 regularFees;
+    uint24 reducedFees;
+}
 
 contract TokenReducedFeesTest is Test, Fixtures {
     using EasyPosm for IPositionManager;
@@ -41,6 +49,8 @@ contract TokenReducedFeesTest is Test, Fixtures {
     uint24 constant REDUCED_FEE = 500; // 0.05%
 
     function setUp() public {
+        string memory p0 = "Entering setup";
+        console.log("Entering setup");
         // creates the pool manager, utility routers, and test tokens
         deployFreshManagerAndRouters();
         deployMintAndApprove2Currencies();
@@ -48,7 +58,8 @@ contract TokenReducedFeesTest is Test, Fixtures {
         deployAndApprovePosm(manager);
 
         // Deploy a test ERC20 token
-        testToken = IERC20(deployCode("TestERC20.sol:TestERC20"));
+        // testToken = IERC20(deployCode("mUSDC.sol:MockUSDC"));
+        address testToken = 0x7A7DEBcbAFC5aBC0E54b848D6FAE28b43202adC8;
 
         // Deploy the hook to an address with the correct flags
         address flags = address(
@@ -69,7 +80,7 @@ contract TokenReducedFeesTest is Test, Fixtures {
         bytes memory initData = abi.encode(
             REGULAR_FEE,
             REDUCED_FEE,
-            address(testToken)
+            testToken
         );
         manager.initialize(key, SQRT_PRICE_1_1, initData);
 
@@ -105,15 +116,15 @@ contract TokenReducedFeesTest is Test, Fixtures {
         vm.deal(user1, 100 ether);
         vm.deal(user2, 100 ether);
 
-        // Mint some test tokens to user1
-        TestERC20(address(testToken)).mint(user1, 1000e18);
+        // // Mint some test tokens to user1
+        // TestERC20(testToken).mint(user1, 1000e18);
     }
 
     function testPoolInitialization() public {
-        TokenReducedFees.poolConfig memory poolConfig = hook.pools(poolId);
-        assertEq(poolConfig.tokenAddress, address(testToken));
-        assertEq(poolConfig.regularFees, REGULAR_FEE);
-        assertEq(poolConfig.reducedFees, REDUCED_FEE);
+        (address tokenAddress, address owner, uint24 regularFees, uint24 reducedFees) = hook.pools(poolId);
+        assertEq(tokenAddress, address(testToken));
+        assertEq(regularFees, REGULAR_FEE);
+        assertEq(reducedFees, REDUCED_FEE);
     }
 
     function testReducedFees() public {
@@ -165,64 +176,9 @@ contract TokenReducedFeesTest is Test, Fixtures {
 
         hook.setPoolConfig(key, newRegularFee, newReducedFee, newTokenAddress);
 
-        TokenReducedFees.poolConfig memory updatedConfig = hook.pools(poolId);
-        assertEq(updatedConfig.regularFees, newRegularFee);
-        assertEq(updatedConfig.reducedFees, newReducedFee);
-        assertEq(updatedConfig.tokenAddress, newTokenAddress);
-    }
-}
-
-// Mock ERC20 token for testing
-contract TestERC20 is IERC20 {
-    mapping(address => uint256) private _balances;
-    mapping(address => mapping(address => uint256)) private _allowances;
-    uint256 private _totalSupply;
-
-    function mint(address to, uint256 amount) public {
-        _balances[to] += amount;
-        _totalSupply += amount;
-    }
-
-    function totalSupply() public view override returns (uint256) {
-        return _totalSupply;
-    }
-
-    function balanceOf(address account) public view override returns (uint256) {
-        return _balances[account];
-    }
-
-    function transfer(
-        address to,
-        uint256 amount
-    ) public override returns (bool) {
-        _balances[msg.sender] -= amount;
-        _balances[to] += amount;
-        return true;
-    }
-
-    function allowance(
-        address owner,
-        address spender
-    ) public view override returns (uint256) {
-        return _allowances[owner][spender];
-    }
-
-    function approve(
-        address spender,
-        uint256 amount
-    ) public override returns (bool) {
-        _allowances[msg.sender][spender] = amount;
-        return true;
-    }
-
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public override returns (bool) {
-        _allowances[from][msg.sender] -= amount;
-        _balances[from] -= amount;
-        _balances[to] += amount;
-        return true;
+        (address tokenAddress, address owner, uint24 regularFees, uint24 reducedFees) = hook.pools(poolId);
+        assertEq(tokenAddress, newTokenAddress);
+        assertEq(regularFees, newRegularFee);
+        assertEq(reducedFees, newReducedFee);
     }
 }
