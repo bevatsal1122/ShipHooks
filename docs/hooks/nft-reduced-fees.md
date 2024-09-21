@@ -15,6 +15,8 @@ import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
+import {LPFeeLibrary} from "@uniswap/v4-core/src/libraries/LPFeeLibrary.sol";
+import "./Constants.sol";
 
 interface IERC721 {
     function balanceOf(address owner) external view returns (uint256 balance);
@@ -27,18 +29,13 @@ struct PoolConfig {
     uint24 reducedFees;
 }
 
-contract ERC721ReducedFeesHook is BaseHook {
+contract NFTReducedFees is BaseHook, Constants {
     using PoolIdLibrary for PoolKey;
 
     IERC721 public immutable nftContract;
     mapping(PoolId => PoolConfig) public pools;
 
-    constructor(
-        IPoolManager _poolManager,
-        IERC721 _nftContract
-    ) BaseHook(_poolManager) {
-        nftContract = _nftContract;
-    }
+    constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
     function getHookPermissions()
         public
@@ -65,13 +62,33 @@ contract ERC721ReducedFeesHook is BaseHook {
             });
     }
 
+    function afterInitialize(
+        address sender,
+        PoolKey calldata key,
+        uint160,
+        int24,
+        bytes calldata hookData
+    ) external override returns (bytes4) {
+        address user = sender;
+        (uint24 _regularFees, uint24 _reducedFees, address _tokenAddress) = abi
+            .decode(hookData, (uint24, uint24, address));
+        PoolConfig memory pool = PoolConfig({
+            owner: user,
+            regularFees: _regularFees,
+            reducedFees: _reducedFees,
+            tokenAddress: _tokenAddress
+        });
+        PoolId poolId = key.toId();
+        pools[poolId] = pool;
+        return BaseHook.afterInitialize.selector;
+    }
+
     function setPoolConfig(
         PoolKey calldata key,
         uint24 _regularFees,
         uint24 _reducedFees,
         address _tokenAddress
     ) external {
-        // Note: In a production setting, you'd want to add access control here
         PoolId poolId = key.toId();
         pools[poolId].regularFees = _regularFees;
         pools[poolId].reducedFees = _reducedFees;
@@ -84,54 +101,27 @@ contract ERC721ReducedFeesHook is BaseHook {
         PoolKey calldata key,
         IPoolManager.SwapParams calldata,
         bytes calldata
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+    ) external view override returns (bytes4, BeforeSwapDelta, uint24) {
+        address user = getMsgSender(sender);
         PoolId poolId = key.toId();
         PoolConfig memory pool = pools[poolId];
 
         require(pool.tokenAddress != address(0), "Pool not configured");
 
-        if (nftContract.balanceOf(sender) > 0) {
+        if (nftContract.balanceOf(user) > 0) {
             return (
                 BaseHook.beforeSwap.selector,
                 BeforeSwapDeltaLibrary.ZERO_DELTA,
-                pool.reducedFees
+                pool.reducedFees | LPFeeLibrary.OVERRIDE_FEE_FLAG
             );
         } else {
             return (
                 BaseHook.beforeSwap.selector,
                 BeforeSwapDeltaLibrary.ZERO_DELTA,
-                pool.regularFees
+                pool.regularFees | LPFeeLibrary.OVERRIDE_FEE_FLAG
             );
         }
     }
-
-    // Implement other required functions from BaseHook with empty bodies
-    function afterSwap(
-        address,
-        PoolKey calldata,
-        IPoolManager.SwapParams calldata,
-        BalanceDelta,
-        bytes calldata
-    ) external override returns (bytes4, int128) {
-        return (BaseHook.afterSwap.selector, 0);
-    }
-
-    function beforeAddLiquidity(
-        address,
-        PoolKey calldata,
-        IPoolManager.ModifyLiquidityParams calldata,
-        bytes calldata
-    ) external override returns (bytes4) {
-        return BaseHook.beforeAddLiquidity.selector;
-    }
-
-    function beforeRemoveLiquidity(
-        address,
-        PoolKey calldata,
-        IPoolManager.ModifyLiquidityParams calldata,
-        bytes calldata
-    ) external override returns (bytes4) {
-        return BaseHook.beforeRemoveLiquidity.selector;
-    }
 }
+
 ```
