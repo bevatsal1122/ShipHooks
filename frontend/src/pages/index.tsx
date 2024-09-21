@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { motion } from "framer-motion";
 import Particles from "@/components/magicui/particles";
 import ConnectButton from "@/lib/ConnectWallet";
+import Navbar from "@/components/Navbar";
 
 export default function Component() {
   const features = [
@@ -30,8 +31,7 @@ export default function Component() {
 
   return (
     <div className="bg-black text-white">
-      {/* Hero Section */}
-      <section className="min-h-screen relative overflow-hidden flex items-center justify-center">
+      <section className="min-h-screen relative  flex items-center justify-center">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-gray-700 to-gray-900 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse"></div>
           <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-gradient-to-r from-gray-800 to-gray-950 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse"></div>
@@ -102,12 +102,8 @@ export default function Component() {
             ))}
           </div>
         </div>
-        <div className="absolute inset-0 z-0">
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-gray-800 to-gray-950 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse"></div>
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-gray-700 to-gray-900 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse"></div>
-        </div>
       </section>
-      <Particles className="absolute inset-0" quantity={500} ease={220} color={color} refresh />
+      <Particles className="absolute top-20 inset-0" quantity={500} ease={220} color={color} refresh />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { mainnet, arbitrum, sepolia } from "@reown/appkit/networks";
 import { Config, cookieStorage, createStorage, http } from "@wagmi/core";
 import { createAppKit } from "@reown/appkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Navbar from "@/components/Navbar";
 
 export const projectId = "a7a48a6002426e8eaafe354ae0bb212b";
 // Set up queryClient
@@ -45,7 +46,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig as Config}>
       <QueryClientProvider client={queryClient}>
-        {" "}
+        <Navbar />
         <Component {...pageProps} />
       </QueryClientProvider>
     </WagmiProvider>
