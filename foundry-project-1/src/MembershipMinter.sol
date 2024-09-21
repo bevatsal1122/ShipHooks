@@ -47,7 +47,7 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
                 afterAddLiquidity: true,
                 beforeRemoveLiquidity: false,
                 afterRemoveLiquidity: false,
-                beforeSwap: true,
+                beforeSwap: false,
                 afterSwap: false,
                 beforeDonate: false,
                 afterDonate: false,
@@ -96,30 +96,6 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
         }
 
         return BaseHook.afterAddLiquidity.selector;
-    }
-
-    function beforeSwap(
-        address sender,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata,
-        bytes calldata
-    ) external view override returns (bytes4, BeforeSwapDelta, uint24) {
-        address user = getMsgSender(sender);
-        PoolId poolId = key.toId();
-        PoolConfig storage pool = pools[poolId];
-        IERC20 token = IERC20(pool.tokenAddress);
-
-        uint256 senderBalance = token.balanceOf(user);
-        require(
-            senderBalance >= pool.requiredLimit,
-            "Swap denied: insufficient token balance"
-        );
-
-        return (
-            BaseHook.beforeSwap.selector,
-            BeforeSwapDeltaLibrary.ZERO_DELTA,
-            0
-        );
     }
 
     function setPoolConfig(

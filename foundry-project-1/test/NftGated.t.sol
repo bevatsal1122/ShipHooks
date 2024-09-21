@@ -7,43 +7,94 @@ import "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import "@uniswap/v4-core/src/types/PoolKey.sol";
 import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 
+// Define any missing structs and types required by Uniswap V4 or your mock
+struct Slot0 {
+    uint160 sqrtPriceX96;
+    int24 tick;
+    uint8 protocolFee;
+    uint8 swapFee;
+    int24 tickSpacing;
+    bool hookData;
+    uint8 hookExtraData;
+}
 
+struct BalanceDeltaNew {
+    int256 amount0;
+    int256 amount1;
+}
+
+// Dummy ModifyPositionParams struct for testing purposes
+struct ModifyPositionParams {
+    address owner;
+    int24 tickLower;
+    int24 tickUpper;
+    uint128 liquidityDelta;
+}
+
+// MockPoolManager contract implementation
 contract MockPoolManager is IPoolManager {
-    function getSlot0(PoolId poolId) external pure override returns (Slot0) {
+    function getSlot0(
+        PoolId poolId
+    ) external pure override returns (Slot0 memory) {
         // Return a dummy Slot0 struct
-        return Slot0({
-            sqrtPriceX96: 0,
-            tick: 0,
-            protocolFee: 0,
-            swapFee: 0,
-            tickSpacing: 0,
-            hookData: false,
-            hookExtraData: 0
-        });
+        return
+            Slot0({
+                sqrtPriceX96: 0,
+                tick: 0,
+                protocolFee: 0,
+                swapFee: 0,
+                tickSpacing: 0,
+                hookData: false,
+                hookExtraData: 0
+            });
     }
 
     // Implement other required functions with minimal functionality
-    function initialize(PoolKey memory, uint160, bytes calldata) external returns (int24, int24, uint256) {
+    function initialize(
+        PoolKey memory,
+        uint160,
+        bytes calldata
+    ) external override returns (int24, int24, uint256) {
         return (0, 0, 0);
     }
 
-    function modifyPosition(PoolKey memory, IPoolManager.ModifyPositionParams memory, bytes calldata) external returns (BalanceDelta) {
+    function modifyPosition(
+        PoolKey memory,
+        ModifyPositionParams memory,
+        bytes calldata
+    ) external override returns (BalanceDelta memory) {
         return BalanceDelta(0, 0);
     }
 
-    function swap(PoolKey memory, IPoolManager.SwapParams memory, bytes calldata) external returns (BalanceDelta) {
+    function swap(
+        PoolKey memory,
+        IPoolManager.SwapParams memory,
+        bytes calldata
+    ) external override returns (BalanceDelta memory) {
         return BalanceDelta(0, 0);
     }
 
-    function donate(PoolKey memory, uint256, uint256, bytes calldata) external returns (BalanceDelta) {
+    function donate(
+        PoolKey memory,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external override returns (BalanceDelta memory) {
         return BalanceDelta(0, 0);
     }
 
-    function take(PoolKey memory, int256, int256, bytes calldata) external returns (BalanceDelta) {
+    function take(
+        PoolKey memory,
+        int256,
+        int256,
+        bytes calldata
+    ) external override returns (BalanceDelta memory) {
         return BalanceDelta(0, 0);
     }
 
-    function settle(address) external payable returns (BalanceDelta) {
+    function settle(
+        address
+    ) external payable override returns (BalanceDelta memory) {
         return BalanceDelta(0, 0);
     }
 
@@ -55,7 +106,11 @@ contract MockPoolManager is IPoolManager {
         return true;
     }
 
-    function transferFrom(address, address, uint256) external pure returns (bool) {
+    function transferFrom(
+        address,
+        address,
+        uint256
+    ) external pure returns (bool) {
         return true;
     }
 }
@@ -148,7 +203,7 @@ contract NFTGatedTest is Test {
         IPoolManager.SwapParams memory params;
 
         vm.prank(user);
-        (bytes4 selector, BeforeSwapDelta delta, uint24 fee) = nftGated
+        (bytes4 selector, BeforeSwapDelta memory delta, uint24 fee) = nftGated
             .beforeSwap(address(this), key, params, "");
 
         assertEq(selector, NFTGated.beforeSwap.selector);
