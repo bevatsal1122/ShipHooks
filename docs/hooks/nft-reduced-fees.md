@@ -1,3 +1,10 @@
+# NFT-based Reduced Fees Swap
+
+The NFT-based Reduced fees Swap hook provides a mechanism to incentize NFT ownership. This hook ensures that users holding a specific NFT will get a discount of your choosing on their swap operations on this pool.
+
+## Usage
+
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
@@ -105,7 +112,7 @@ contract ERC721ReducedFeesHook is BaseHook {
         IPoolManager.SwapParams calldata,
         BalanceDelta,
         bytes calldata
-    ) external pure override returns (bytes4, int128) {
+    ) external override returns (bytes4, int128) {
         return (BaseHook.afterSwap.selector, 0);
     }
 
@@ -114,7 +121,7 @@ contract ERC721ReducedFeesHook is BaseHook {
         PoolKey calldata,
         IPoolManager.ModifyLiquidityParams calldata,
         bytes calldata
-    ) external pure override returns (bytes4) {
+    ) external override returns (bytes4) {
         return BaseHook.beforeAddLiquidity.selector;
     }
 
@@ -123,7 +130,8 @@ contract ERC721ReducedFeesHook is BaseHook {
         PoolKey calldata,
         IPoolManager.ModifyLiquidityParams calldata,
         bytes calldata
-    ) external pure override returns (bytes4) {
+    ) external override returns (bytes4) {
         return BaseHook.beforeRemoveLiquidity.selector;
     }
 }
+```
