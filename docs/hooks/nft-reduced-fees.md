@@ -1,6 +1,6 @@
-# NFT-based Reduced Fees Swap
+# Discounted Fee Swap Hook
 
-The NFT-based Reduced fees Swap hook provides a mechanism to incentize NFT ownership. This hook ensures that users holding a specific NFT will get a discount of your choosing on their swap operations on this pool.
+The Discounted/Reduced Fee Swap hook allows users holding a specific token to benefit from reduced fees when performing swap operations. This incentivizes token holding and can be used as a reward mechanism for your platform's users.
 
 ## Usage
 
