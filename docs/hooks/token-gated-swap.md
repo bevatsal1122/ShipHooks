@@ -1,5 +1,3 @@
-# docs/hooks/token-gated-swap.md
-
 # Token-Gated Swap Hook
 
 The Token-Gated Swap hook provides a mechanism to restrict swap operations based on token ownership. This hook ensures that only users holding a specific token or a minimum amount of tokens can perform swap operations.

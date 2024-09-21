@@ -1,36 +1,37 @@
+# NFT-Gated Swap
+
+The NFT-Gated Swap hook provides a mechanism to restrict swap operations based on NFT ownership. This hook ensures that only users holding a specific NFT can perform swap operations.
+
+## Usage
+
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import {BaseHook} from "v4-periphery/src/base/hooks/BaseHook.sol";
-
 import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
-import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {LPFeeLibrary} from "@uniswap/v4-core/src/libraries/LPFeeLibrary.sol";
+import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import {console} from "forge-std/console.sol";
 import "./Constants.sol";
 import "./IUniversalRouter.sol";
 
 struct PoolConfig {
-    address tokenAddress;
+    address nftAddress;
     address owner;
-    uint24 regularFees;
-    uint24 reducedFees;
+    uint256 requiredNFTBalance;
 }
 
-contract TokenReducedFees is BaseHook, Constants {
+contract NFTGated is BaseHook, Constants {
     using PoolIdLibrary for PoolKey;
 
     mapping(PoolId => PoolConfig) public pools;
 
     constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
-
-    function getPool(PoolId key) public view returns (address) {
-        return pools[key].owner;
-    }
 
     function getHookPermissions()
         public
@@ -65,15 +66,14 @@ contract TokenReducedFees is BaseHook, Constants {
         bytes calldata hookData
     ) external override returns (bytes4) {
         address user = getMsgSender(sender);
-
-        (uint24 _regularFees, uint24 _reducedFees, address _tokenAddress) = abi
-            .decode(hookData, (uint24, uint24, address));
-
+        (address _nftAddress, uint256 _requiredNFTBalance) = abi.decode(
+            hookData,
+            (address, uint256)
+        );
         PoolConfig memory pool = PoolConfig({
-            tokenAddress: _tokenAddress,
+            nftAddress: _nftAddress,
             owner: user,
-            regularFees: _regularFees,
-            reducedFees: _reducedFees
+            requiredNFTBalance: _requiredNFTBalance
         });
         PoolId poolId = key.toId();
         pools[poolId] = pool;
@@ -82,14 +82,12 @@ contract TokenReducedFees is BaseHook, Constants {
 
     function setPoolConfig(
         PoolKey calldata key,
-        uint24 _regularFees,
-        uint24 _reducedFees,
-        address _tokenAddress
+        address _nftAddress,
+        uint256 _requiredNFTBalance
     ) external {
         PoolId poolId = key.toId();
-        pools[poolId].regularFees = _regularFees;
-        pools[poolId].reducedFees = _reducedFees;
-        pools[poolId].tokenAddress = _tokenAddress;
+        pools[poolId].nftAddress = _nftAddress;
+        pools[poolId].requiredNFTBalance = _requiredNFTBalance;
     }
 
     function beforeSwap(
@@ -100,25 +98,27 @@ contract TokenReducedFees is BaseHook, Constants {
     ) external view override returns (bytes4, BeforeSwapDelta, uint24) {
         address user = getMsgSender(sender);
 
+        console.log(user);
+
         PoolId poolId = key.toId();
 
         PoolConfig memory pool = pools[poolId];
 
-        IERC20 token = IERC20(pool.tokenAddress);
-        uint256 senderBalance = token.balanceOf(user);
+        IERC721 nft = IERC721(pool.nftAddress);
 
-        if (senderBalance > 0) {
-            return (
-                BaseHook.beforeSwap.selector,
-                BeforeSwapDeltaLibrary.ZERO_DELTA,
-                pool.reducedFees | LPFeeLibrary.OVERRIDE_FEE_FLAG
-            );
-        } else {
-            return (
-                BaseHook.beforeSwap.selector,
-                BeforeSwapDeltaLibrary.ZERO_DELTA,
-                pool.regularFees | LPFeeLibrary.OVERRIDE_FEE_FLAG
-            );
-        }
+        uint256 senderNFTBalance = nft.balanceOf(user);
+
+        require(
+            senderNFTBalance >= pool.requiredNFTBalance,
+            "Swap denied: insufficient NFT balance"
+        );
+
+        return (
+            BaseHook.beforeSwap.selector,
+            BeforeSwapDeltaLibrary.ZERO_DELTA,
+            0
+        );
     }
 }
+
+```

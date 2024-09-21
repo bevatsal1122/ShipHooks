@@ -1,8 +1,6 @@
-# docs/hooks/reduced-fee-swap.md
+# Discounted Fee Swap Hook
 
-# Reduced Fee Swap Hook
-
-The Reduced Fee Swap hook allows users holding a specific token to benefit from reduced fees when performing swap operations. This incentivizes token holding and can be used as a reward mechanism for your platform's users.
+The Discounted/Reduced Fee Swap hook allows users holding a specific token to benefit from reduced fees when performing swap operations. This incentivizes token holding and can be used as a reward mechanism for your platform's users.
 
 ## Usage
 

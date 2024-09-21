@@ -17,8 +17,8 @@ struct PoolConfig {
     address tokenAddress;
     address owner;
     address vault;
-    int24 requiredLimit;
-    int24 rewardTokenAmount;
+    uint256 requiredLimit;
+    uint256 rewardTokenAmount;
 }
 
 contract TokenGated is BaseHook, Constants {
@@ -68,12 +68,13 @@ contract TokenGated is BaseHook, Constants {
             int24 _minimumQualificationAmount,
             int24 _rewardTokenAmount
         ) = abi.decode(hookData, (address, address, int24, int24));
+
         address user = getMsgSender(sender);
         PoolConfig memory pool = PoolConfig({
-            owner: sender,
+            owner: user,
             vault: _rewardsTokenStockAddress,
-            requiredLimit: _minimumQualificationAmount,
-            rewardTokenAmount: _rewardTokenAmount,
+            requiredLimit: uint256(int256(int128(_minimumQualificationAmount))),
+            rewardTokenAmount: uint256(int256(int128(_rewardTokenAmount))),
             tokenAddress: _tokenAddress
         });
         PoolId poolId = key.toId();
@@ -91,8 +92,12 @@ contract TokenGated is BaseHook, Constants {
         PoolId poolId = key.toId();
         pools[poolId].tokenAddress = _tokenAddress;
         pools[poolId].vault = __rewardsTokenStockAddress;
-        pools[poolId].requiredLimit = _minimumQualificationAmount;
-        pools[poolId].rewardTokenAmount = _rewardTokenAmount;
+        pools[poolId].requiredLimit = uint256(
+            int256(int128(_minimumQualificationAmount))
+        );
+        pools[poolId].rewardTokenAmount = uint256(
+            int256(int128(_rewardTokenAmount))
+        );
     }
 
     function afterSwap(
@@ -112,9 +117,8 @@ contract TokenGated is BaseHook, Constants {
             "Swap denied: sender has zero token balance"
         );
 
-        uint256 swapAmount = uint256(
-            delta.amount0() > 0 ? delta.amount0() : delta.amount1()
-        );
+        uint256 swapAmount = calculateLiquidityValueUSD(delta);
+
         if (swapAmount >= pool.requiredLimit) {
             IERC20 usdcToken = IERC20(USDCToken);
 
@@ -128,6 +132,19 @@ contract TokenGated is BaseHook, Constants {
             );
         }
 
-        return (BaseHook.afterSwap.selector, pool.rewardTokenAmount);
+        return (
+            BaseHook.afterSwap.selector,
+            int128(uint128(uint256(pool.rewardTokenAmount)))
+        );
+    }
+
+    function calculateLiquidityValueUSD(
+        BalanceDelta delta
+    ) internal pure returns (uint256) {
+        return
+            uint256(
+                uint128(int128(delta.amount0())) +
+                    uint128(int128(delta.amount1()))
+            );
     }
 }

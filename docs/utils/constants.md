@@ -1,7 +1,7 @@
 # Constants
 
-Helps to get the universal router address and provides a utility function to fetch the User's address (the original `msg.sender`) which is stored in a Lock
-in the Universal Router contract.
+Helps to get the universal router address and provides a utility function to fetch the User's address (the original `msg.sender`) 
+which is preserved in a Lock in the Universal Router contract.
 
 ```solidity
 // SPDX-License-Identifier: MIT
