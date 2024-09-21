@@ -4,14 +4,6 @@ The Token-Gated Swap hook provides a mechanism to restrict swap operations based
 
 ## Usage
 
-To use the Token-Gated Swap hook in your project, import it from our package:
-
-```javascript
-import { useTokenGatedSwap } from "@your-org/uniswap-hooks";
-```
-
-Then, you can use it in your component:
-
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;

@@ -4,14 +4,6 @@ The Discounted/Reduced Fee Swap hook allows users holding a specific token to be
 
 ## Usage
 
-To use the Reduced Fee Swap hook in your project, import it from our package:
-
-```javascript
-import { useReducedFeeSwap } from "@your-org/uniswap-hooks";
-```
-
-Then, you can use it in your component:
-
 ```javascript
 function ReducedFeeSwapComponent() {
   const { swap, loading, error, feeReduction } = useReducedFeeSwap({

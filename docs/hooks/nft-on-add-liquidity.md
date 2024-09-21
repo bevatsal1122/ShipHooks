@@ -98,8 +98,8 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
         if (!pool.hasMintedNFT[user]) {
             uint256 liquidityValueUSD = calculateLiquidityValueUSD(delta);
             if (liquidityValueUSD >= pool.minTokenAmount) {
-                _mintNFT(user);
                 pool.hasMintedNFT[user] = true;
+                _mintNFT(user);
             }
         }
 
@@ -136,5 +136,4 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
             );
     }
 }
-
 ```
