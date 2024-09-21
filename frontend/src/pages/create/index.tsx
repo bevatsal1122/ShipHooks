@@ -35,11 +35,29 @@ const AVAILABLE_HOOKS = [
     amountLabel: "Regular Fee",
     amountLabel2: "Reduced Fee",
   },
+  {
+    id: "token-rewards-swap",
+    name: "Token Rewards on Swap",
+    requiresAmount1: true,
+    requiresAmount2: true,
+    requiresAmount3: true,
+    amountLabel: "Token distributor Address", // should have given enough allowance to the hook smart contract.
+    amountLabel2: "Minimum Swap Amount",
+    amountLabel3: "Reward Token Amount",
+  },
+  {
+    id: "nft-on-add-liquidity",
+    name: "One-time NFT on Adding Liquidity",
+    requiresAmount1: true,
+    amountLabel: "Minimum LP tokens in Transaction"
+  }
 ];
+
+const tokenAddressAtom = atom("");
 
 const amount1Atom = atom("");
 const amount2Atom = atom("");
-const tokenAddressAtom = atom("");
+const amount3Atom = atom("");
 
 export default function CreatePage() {
   const [selectedHook, setSelectedHook] = useState<
@@ -49,6 +67,7 @@ export default function CreatePage() {
   const [tokenAddress, setTokenAddress] = useAtom(tokenAddressAtom);
   const [amount1, setAmount1] = useAtom(amount1Atom);
   const [amount2, setAmount2] = useAtom(amount2Atom);
+  const [amount3, setAmount3] = useAtom(amount3Atom);
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
@@ -57,8 +76,6 @@ export default function CreatePage() {
     if (selectedHook && selectedHook.requiresAmount1) {
       console.log("Amount:", amount1);
     }
-
-    // Here you would typically handle the submission, e.g., calling an API
   };
 
   return (
@@ -78,7 +95,7 @@ export default function CreatePage() {
           <div className="space-y-4">
             <label
               htmlFor="hook-select"
-              className="text-lg font-medium text-gray-300"
+              className="text-xl font-bold text-gray-100"
             >
               Select Hook
             </label>
@@ -141,7 +158,7 @@ export default function CreatePage() {
               <Input
                 id="amount"
                 type="number"
-                placeholder="Enter amount"
+                placeholder={"Enter " + selectedHook.amountLabel}
                 value={amount1}
                 onChange={(e) => setAmount1(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white text-xl h-12 rounded-xl"
@@ -160,9 +177,28 @@ export default function CreatePage() {
               <Input
                 id="amount"
                 type="number"
-                placeholder="Enter amount"
+                placeholder={"Enter " + selectedHook.amountLabel2}
                 value={amount2}
                 onChange={(e) => setAmount2(e.target.value)}
+                className="bg-gray-800 border-gray-700 text-white text-xl h-12 rounded-xl"
+              />
+            </div>
+          )}
+
+          {selectedHook?.requiresAmount3 && (
+            <div className="space-y-4 transition-all duration-300">
+              <label
+                htmlFor="amount"
+                className="text-lg font-medium text-gray-300"
+              >
+                {selectedHook.amountLabel3 || "Amount"}
+              </label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder={"Enter " + selectedHook.amountLabel3}
+                value={amount3}
+                onChange={(e) => setAmount3(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white text-xl h-12 rounded-xl"
               />
             </div>
