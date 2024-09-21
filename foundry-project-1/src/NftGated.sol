@@ -6,32 +6,25 @@ import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
-import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
-
-interface IERC721 {
-    function balanceOf(address owner) external view returns (uint256 balance);
-}
+import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
+import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import {console} from "forge-std/console.sol";
+import "./Constants.sol";
+import "./IUniversalRouter.sol";
 
 struct PoolConfig {
-    address tokenAddress;
+    address nftAddress;
     address owner;
-    bool isTokenGated;
     uint256 requiredNFTBalance;
 }
 
-contract ERC721TokenGateHook is BaseHook {
+contract NFTGated is BaseHook, Constants {
     using PoolIdLibrary for PoolKey;
 
-    IERC721 public immutable nftContract;
     mapping(PoolId => PoolConfig) public pools;
 
-    constructor(
-        IPoolManager _poolManager,
-        IERC721 _nftContract
-    ) BaseHook(_poolManager) {
-        nftContract = _nftContract;
-    }
+    constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
     function getHookPermissions()
         public
@@ -42,7 +35,7 @@ contract ERC721TokenGateHook is BaseHook {
         return
             Hooks.Permissions({
                 beforeInitialize: false,
-                afterInitialize: false,
+                afterInitialize: true,
                 beforeAddLiquidity: false,
                 afterAddLiquidity: false,
                 beforeRemoveLiquidity: false,
@@ -58,17 +51,35 @@ contract ERC721TokenGateHook is BaseHook {
             });
     }
 
+    function afterInitialize(
+        address sender,
+        PoolKey calldata key,
+        uint160,
+        int24,
+        bytes calldata hookData
+    ) external override returns (bytes4) {
+        address user = getMsgSender(sender);
+        (address _nftAddress, uint256 _requiredNFTBalance) = abi.decode(
+            hookData,
+            (address, uint256)
+        );
+        PoolConfig memory pool = PoolConfig({
+            nftAddress: _nftAddress,
+            owner: user,
+            requiredNFTBalance: _requiredNFTBalance
+        });
+        PoolId poolId = key.toId();
+        pools[poolId] = pool;
+        return BaseHook.afterInitialize.selector;
+    }
+
     function setPoolConfig(
         PoolKey calldata key,
-        address _tokenAddress,
-        bool _isTokenGated,
+        address _nftAddress,
         uint256 _requiredNFTBalance
     ) external {
-        // Note: In a production setting, you'd want to add access control here
         PoolId poolId = key.toId();
-        pools[poolId].tokenAddress = _tokenAddress;
-        pools[poolId].owner = msg.sender;
-        pools[poolId].isTokenGated = _isTokenGated;
+        pools[poolId].nftAddress = _nftAddress;
         pools[poolId].requiredNFTBalance = _requiredNFTBalance;
     }
 
@@ -77,52 +88,28 @@ contract ERC721TokenGateHook is BaseHook {
         PoolKey calldata key,
         IPoolManager.SwapParams calldata,
         bytes calldata
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+    ) external view override returns (bytes4, BeforeSwapDelta, uint24) {
+        address user = getMsgSender(sender);
+
+        console.log(user);
+
         PoolId poolId = key.toId();
+
         PoolConfig memory pool = pools[poolId];
 
-        require(pool.tokenAddress != address(0), "Pool not configured");
+        IERC721 nft = IERC721(pool.nftAddress);
 
-        if (pool.isTokenGated) {
-            require(
-                nftContract.balanceOf(sender) >= pool.requiredNFTBalance,
-                "Insufficient NFT balance for swap"
-            );
-        }
+        uint256 senderNFTBalance = nft.balanceOf(user);
+
+        require(
+            senderNFTBalance >= pool.requiredNFTBalance,
+            "Swap denied: insufficient NFT balance"
+        );
 
         return (
             BaseHook.beforeSwap.selector,
             BeforeSwapDeltaLibrary.ZERO_DELTA,
             0
         );
-    }
-
-    // Implement other required functions from BaseHook with empty bodies
-    function afterSwap(
-        address,
-        PoolKey calldata,
-        IPoolManager.SwapParams calldata,
-        BalanceDelta,
-        bytes calldata
-    ) external override returns (bytes4, int128) {
-        return (BaseHook.afterSwap.selector, 0);
-    }
-
-    function beforeAddLiquidity(
-        address,
-        PoolKey calldata,
-        IPoolManager.ModifyLiquidityParams calldata,
-        bytes calldata
-    ) external override returns (bytes4) {
-        return BaseHook.beforeAddLiquidity.selector;
-    }
-
-    function beforeRemoveLiquidity(
-        address,
-        PoolKey calldata,
-        IPoolManager.ModifyLiquidityParams calldata,
-        bytes calldata
-    ) external override returns (bytes4) {
-        return BaseHook.beforeRemoveLiquidity.selector;
     }
 }

@@ -17,8 +17,7 @@ import "./IUniversalRouter.sol";
 struct PoolConfig {
     address tokenAddress;
     address owner;
-    uint256 requiredTokenAmount;
-    uint256 minimumLiquidityUSD;
+    uint256 requiredLimit;
     mapping(address => bool) hasMintedNFT;
 }
 
@@ -67,16 +66,14 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
         bytes calldata hookData
     ) external override returns (bytes4) {
         address user = getMsgSender(sender);
-        (
-            address _tokenAddress,
-            uint256 _requiredTokenAmount,
-            uint256 _minimumLiquidityUSD
-        ) = abi.decode(hookData, (address, uint256, uint256));
+        (address _tokenAddress, uint256 _requiredLimit) = abi.decode(
+            hookData,
+            (address, uint256)
+        );
         PoolId poolId = key.toId();
         pools[poolId].tokenAddress = _tokenAddress;
         pools[poolId].owner = user;
-        pools[poolId].requiredTokenAmount = _requiredTokenAmount;
-        pools[poolId].minimumLiquidityUSD = _minimumLiquidityUSD;
+        pools[poolId].requiredLimit = _requiredLimit;
         return BaseHook.afterInitialize.selector;
     }
 
@@ -92,8 +89,8 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
         PoolConfig storage pool = pools[poolId];
 
         if (!pool.hasMintedNFT[user]) {
-            uint256 liquidityValueUSD = calculateLiquidityValueUSD(key, delta);
-            if (liquidityValueUSD >= pool.minimumLiquidityUSD) {
+            uint256 liquidityValueUSD = calculateLiquidityValueUSD(delta);
+            if (liquidityValueUSD >= pool.requiredLimit) {
                 _mintNFT(user);
                 pool.hasMintedNFT[user] = true;
             }
@@ -115,7 +112,7 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
 
         uint256 senderBalance = token.balanceOf(user);
         require(
-            senderBalance >= pool.requiredTokenAmount,
+            senderBalance >= pool.requiredLimit,
             "Swap denied: insufficient token balance"
         );
 
@@ -129,20 +126,11 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
     function setPoolConfig(
         PoolKey calldata key,
         address _tokenAddress,
-        uint256 _requiredTokenAmount,
-        uint256 _minimumLiquidityUSD
+        uint256 _requiredLimit
     ) external {
         PoolId poolId = key.toId();
         pools[poolId].tokenAddress = _tokenAddress;
-        pools[poolId].requiredTokenAmount = _requiredTokenAmount;
-        pools[poolId].minimumLiquidityUSD = _minimumLiquidityUSD;
-    }
-
-    function getMinimumLiquidityUSD(
-        PoolKey calldata key
-    ) external view returns (uint256) {
-        PoolId poolId = key.toId();
-        return pools[poolId].minimumLiquidityUSD;
+        pools[poolId].requiredLimit = _requiredLimit;
     }
 
     function _mintNFT(address to) internal {
@@ -152,16 +140,16 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
     }
 
     function calculateLiquidityValueUSD(
-        PoolKey calldata key,
         BalanceDelta delta
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         // This is a placeholder implementation. In a real-world scenario, you would need to:
         // 1. Get the current price of both tokens in the pool
         // 2. Calculate the USD value of the liquidity added
         // For simplicity, we'll assume 1 token = 1 USD here
         return
             uint256(
-                uint128(int128(delta.amount0)) + uint128(int128(delta.amount1))
+                uint128(int128(delta.amount0())) +
+                    uint128(int128(delta.amount1()))
             );
     }
 }
