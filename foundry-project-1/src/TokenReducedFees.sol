@@ -10,8 +10,9 @@ import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {console} from "forge-std/console.sol";
 
-struct poolConfig {
+struct PoolConfig {
     address tokenAddress;
     address owner;
     uint24 regularFees;
@@ -21,9 +22,17 @@ struct poolConfig {
 contract TokenReducedFees is BaseHook {
     using PoolIdLibrary for PoolKey;
 
-    mapping(PoolId => poolConfig) public pools;
+    mapping(PoolId => PoolConfig) public pools;
 
     constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
+
+    function ping() public returns (string memory) {
+        return "pong";
+    }
+
+    function getPool(PoolId key) public view returns (address) {
+        return pools[key].owner;
+    }
 
     function getHookPermissions()
         public
@@ -57,8 +66,10 @@ contract TokenReducedFees is BaseHook {
         int24,
         bytes calldata hookData
     ) external override returns (bytes4) {
-        ( uint24 _regularFees, uint24 _reducedFees, address _tokenAddress ) = abi.decode(hookData, (uint24, uint24, address));
-        poolConfig memory pool = poolConfig({
+        (uint24 _regularFees, uint24 _reducedFees, address _tokenAddress) = abi
+            .decode(hookData, (uint24, uint24, address));
+            
+        PoolConfig memory pool = PoolConfig({
             tokenAddress: _tokenAddress,
             owner: sender,
             regularFees: _regularFees,
@@ -89,7 +100,7 @@ contract TokenReducedFees is BaseHook {
     ) external override returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
 
-        poolConfig memory pool = pools[poolId];
+        PoolConfig memory pool = pools[poolId];
 
         IERC20 token = IERC20(pool.tokenAddress);
         uint256 senderBalance = token.balanceOf(sender);
@@ -104,6 +115,7 @@ contract TokenReducedFees is BaseHook {
             return (
                 BaseHook.beforeSwap.selector,
                 BeforeSwapDeltaLibrary.ZERO_DELTA,
+                // toBalanceDelta(1, 2),
                 pool.regularFees
             );
         }

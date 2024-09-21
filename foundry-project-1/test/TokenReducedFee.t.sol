@@ -21,7 +21,7 @@ import {Fixtures} from "./utils/Fixtures.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {console} from "forge-std/console.sol";
 
-struct poolConfig {
+struct PoolConfig {
     address tokenAddress;
     address owner;
     uint24 regularFees;
@@ -51,8 +51,14 @@ contract TokenReducedFeesTest is Test, Fixtures {
     uint24 constant REDUCED_FEE = 500; // 0.05%
 
     function setUp() public {
-        string memory p0 = "Entering setup";
         console.log("Entering setup");
+
+        // Setup test users
+        user1 = address(0x1);
+        user2 = address(0x2);
+        vm.deal(user1, 100 ether);
+        vm.deal(user2, 100 ether);
+
         // creates the pool manager, utility routers, and test tokens
         deployFreshManagerAndRouters();
         deployMintAndApprove2Currencies();
@@ -76,7 +82,9 @@ contract TokenReducedFeesTest is Test, Fixtures {
 
         // Create the pool
         key = PoolKey(currency0, currency1, 3000, 60, IHooks(hook));
+
         poolId = key.toId();
+
         bytes memory initData = abi.encode(REGULAR_FEE, REDUCED_FEE, testToken);
         manager.initialize(key, SQRT_PRICE_1_1, initData);
 
@@ -105,15 +113,6 @@ contract TokenReducedFeesTest is Test, Fixtures {
             block.timestamp,
             ZERO_BYTES
         );
-
-        // Setup test users
-        user1 = address(0x1);
-        user2 = address(0x2);
-        vm.deal(user1, 100 ether);
-        vm.deal(user2, 100 ether);
-
-        // // Mint some test tokens to user1
-        // TestERC20(testToken).mint(user1, 1000e18);
     }
 
     function testPoolInitialization() public {
@@ -131,8 +130,10 @@ contract TokenReducedFeesTest is Test, Fixtures {
     function testReducedFees() public {
         // Swap as user1 (should get reduced fees)
         vm.prank(user1);
+
         bool zeroForOne = true;
         int256 amountSpecified = -1e18;
+
         BalanceDelta swapDelta = swap(
             key,
             zeroForOne,
@@ -153,6 +154,7 @@ contract TokenReducedFeesTest is Test, Fixtures {
         vm.prank(user2);
         bool zeroForOne = true;
         int256 amountSpecified = -1e18;
+
         BalanceDelta swapDelta = swap(
             key,
             zeroForOne,
