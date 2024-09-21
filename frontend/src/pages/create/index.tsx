@@ -13,8 +13,7 @@ import {
 import RetroGrid from "@/components/magicui/retro-grid";
 import { atom, useAtom } from "jotai";
 import { AVAILABLE_HOOKS } from "@/constants";
-
-
+import { Hook } from "../../../types";
 
 const tokenAddressAtom = atom("");
 
@@ -23,9 +22,7 @@ const amount2Atom = atom("");
 const amount3Atom = atom("");
 
 export default function CreatePage() {
-  const [selectedHook, setSelectedHook] = useState<
-    (typeof AVAILABLE_HOOKS)[number] | null
-  >(null);
+  const [selectedHook, setSelectedHook] = useState<Hook | null>(null);
 
   const [tokenAddress, setTokenAddress] = useAtom(tokenAddressAtom);
   const [amount1, setAmount1] = useAtom(amount1Atom);

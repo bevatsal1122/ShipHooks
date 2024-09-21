@@ -1,40 +1,132 @@
-# Discounted Fee Swap Hook
+# Token Discounted Fee Swap Hook
 
 The Discounted/Reduced Fee Swap hook allows users holding a specific token to benefit from reduced fees when performing swap operations. This incentivizes token holding and can be used as a reward mechanism for your platform's users.
 
 ## Usage
 
-```javascript
-function ReducedFeeSwapComponent() {
-  const { swap, loading, error, feeReduction } = useReducedFeeSwap({
-    discountToken: '0x5678...', // Address of the token that grants a fee discount
-    discountThreshold: '100000000000000000000' // Minimum balance for discount (e.g., 100 tokens with 18 decimals)
-  });
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
 
-  if (loading) return Loading...;
-  if (error) return Error: {error.message};
+import {BaseHook} from "v4-periphery/src/base/hooks/BaseHook.sol";
 
-  return (
+import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
+import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
+import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
+import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
+import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
+import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
+import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {LPFeeLibrary} from "@uniswap/v4-core/src/libraries/LPFeeLibrary.sol";
+import "./Constants.sol";
 
-      Fee Reduction: {feeReduction}%
-      <button onClick={() => swap(/* swap parameters */)}>Perform Reduced Fee Swap
-
-  );
+struct PoolConfig {
+    address tokenAddress;
+    address owner;
+    uint24 regularFees;
+    uint24 reducedFees;
 }
+
+contract TokenReducedFees is BaseHook, Constants {
+    using PoolIdLibrary for PoolKey;
+
+    mapping(PoolId => PoolConfig) public pools;
+
+    constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
+
+    function getPool(PoolId key) public view returns (address) {
+        return pools[key].owner;
+    }
+
+    function getHookPermissions()
+        public
+        pure
+        override
+        returns (Hooks.Permissions memory)
+    {
+        return
+            Hooks.Permissions({
+                beforeInitialize: false,
+                afterInitialize: true,
+                beforeAddLiquidity: false,
+                afterAddLiquidity: false,
+                beforeRemoveLiquidity: false,
+                afterRemoveLiquidity: false,
+                beforeSwap: true,
+                afterSwap: false,
+                beforeDonate: false,
+                afterDonate: false,
+                beforeSwapReturnDelta: false,
+                afterSwapReturnDelta: false,
+                afterAddLiquidityReturnDelta: false,
+                afterRemoveLiquidityReturnDelta: false
+            });
+    }
+
+    function afterInitialize(
+        address sender,
+        PoolKey calldata key,
+        uint160,
+        int24,
+        bytes calldata hookData
+    ) external override returns (bytes4) {
+        address user = sender;
+
+        (uint24 _regularFees, uint24 _reducedFees, address _tokenAddress) = abi
+            .decode(hookData, (uint24, uint24, address));
+
+        PoolConfig memory pool = PoolConfig({
+            tokenAddress: _tokenAddress,
+            owner: user,
+            regularFees: _regularFees,
+            reducedFees: _reducedFees
+        });
+        PoolId poolId = key.toId();
+        pools[poolId] = pool;
+        return BaseHook.afterInitialize.selector;
+    }
+
+    function setPoolConfig(
+        PoolKey calldata key,
+        uint24 _regularFees,
+        uint24 _reducedFees,
+        address _tokenAddress
+    ) external {
+        PoolId poolId = key.toId();
+        pools[poolId].regularFees = _regularFees;
+        pools[poolId].reducedFees = _reducedFees;
+        pools[poolId].tokenAddress = _tokenAddress;
+    }
+
+    function beforeSwap(
+        address sender,
+        PoolKey calldata key,
+        IPoolManager.SwapParams calldata,
+        bytes calldata
+    ) external view override returns (bytes4, BeforeSwapDelta, uint24) {
+        address user = getMsgSender(sender);
+
+        PoolId poolId = key.toId();
+
+        PoolConfig memory pool = pools[poolId];
+
+        IERC20 token = IERC20(pool.tokenAddress);
+        uint256 senderBalance = token.balanceOf(user);
+
+        if (senderBalance > 0) {
+            return (
+                BaseHook.beforeSwap.selector,
+                BeforeSwapDeltaLibrary.ZERO_DELTA,
+                pool.reducedFees | LPFeeLibrary.OVERRIDE_FEE_FLAG
+            );
+        } else {
+            return (
+                BaseHook.beforeSwap.selector,
+                BeforeSwapDeltaLibrary.ZERO_DELTA,
+                pool.regularFees | LPFeeLibrary.OVERRIDE_FEE_FLAG
+            );
+        }
+    }
+}
+
 ```
-
-## Configuration
-
-The `useReducedFeeSwap` hook accepts the following configuration options:
-
-- `discountToken` (string): The address of the token that grants a fee discount.
-- `discountThreshold` (string): The minimum balance of the discount token required to receive the fee reduction, expressed in wei.
-
-## Return Values
-
-The hook returns an object with the following properties:
-
-- `swap` (function): A function to perform the swap operation with reduced fees.
-- `loading` (boolean): Indicates whether the hook is currently calculating the fee reduction.
-- `error` (Error | null): Any error that occurred during the fee reduction calculation.
-- `feeReduction` (number): The percentage of fee reduction the user is eligible for.

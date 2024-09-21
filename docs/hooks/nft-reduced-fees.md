@@ -1,4 +1,4 @@
-# Discounted Fee Swap Hook
+# NFT Discounted Fee Swap Hook
 
 The Discounted/Reduced Fee Swap hook allows users holding a specific token to benefit from reduced fees when performing swap operations. This incentivizes token holding and can be used as a reward mechanism for your platform's users.
 

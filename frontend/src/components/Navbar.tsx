@@ -6,8 +6,6 @@ import ConnectButton from "@/lib/ConnectWallet";
 import { isExternal } from "util/types";
 
 const Navbar = () => {
-  const router = useRouter();
-
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Create", path: "/create" },

@@ -14,13 +14,13 @@ Before you begin, make sure you have the following installed:
 To install the Uniswap Hooks package, run the following command:
 
 ```bash
-npm install @your-org/uniswap-hooks
+npm install shiphooks
 ```
 
 or if you're using yarn:
 
 ```bash
-yarn add @your-org/uniswap-hooks
+yarn add shiphooks
 ```
 
 ## Basic Usage
