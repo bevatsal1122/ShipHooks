@@ -26,7 +26,7 @@ export default defineConfig({
         text: 'Hooks',
         items: [
           { text: 'Token-Gated Swap', link: '/hooks/token-gated-swap' },
-          { text: 'Reduced Fee Swap', link: '/hooks/reduced-fee-swap' }
+          { text: 'Discounted Fee Swap', link: '/hooks/reduced-fee-swap' }
         ]
       },
       {
