@@ -4,6 +4,7 @@ import { useWriteContract } from "wagmi";
 import PoolManagerABI from "@/constants/abis/PoolManager.json" assert { type: "json" };
 import { POOL_MANAGER_ADDRESS } from "@/constants";
 import { encodeSqrtRatioX96 } from "@uniswap/v3-sdk";
+import { encodeAbiParameters, encodePacked } from "viem";
 
 const DEFAULT_CREATE_POOL_CONFIG = {
   currency0: "0x60b8f5fF057990a0F5B5c92a9eE82676A400de1B", // USDT (Mock)
@@ -35,35 +36,38 @@ export const useCreatePool = () => {
 
         const sqrtPriceX96 = encodeSqrtRatioX96("1000", "500");
 
-        const hookData: any = {};
+        const initialHookData: any = {};
 
         switch (hook.id) {
           case "nft-discounted-fee":
           case "discounted-fee": {
-            hookData.regularFees = amount1;
-            hookData.reducedFees = amount2;
-            hookData.tokenAddress = tokenAddress;
+            initialHookData.regularFees = amount1;
+            initialHookData.reducedFees = amount2;
+            initialHookData.tokenAddress = tokenAddress;
             break;
           }
           case "token-rewards-swap": {
-            hookData.tokenAddress = tokenAddress;
-            hookData.vault = amount1;
-            hookData.minSwapAmount = amount2;
-            hookData.rewardTokenAmount = amount3;
+            initialHookData.tokenAddress = tokenAddress;
+            initialHookData.vault = amount1;
+            initialHookData.minSwapAmount = amount2;
+            initialHookData.rewardTokenAmount = amount3;
           }
           case "nft-on-add-liquidity": {
-            hookData.tokenAddress = tokenAddress;
-            hookData.minLPTokens = amount1;
+            initialHookData.tokenAddress = tokenAddress;
+            initialHookData.minLPTokens = amount1;
           }
 
           case "token-gated":
           case "nft-gated": {
-            hookData.tokenAddress = tokenAddress;
+            initialHookData.tokenAddress = tokenAddress;
           }
 
           default: {
           }
         }
+
+        const hookData = encodePacked(["bytes"], [initialHookData]);
+        // const hookData = encodeAbiParameters([''])
 
         writeContractAsync({
           abi: PoolManagerABI,

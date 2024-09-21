@@ -26,6 +26,7 @@ export const wagmiAdapter = new WagmiAdapter({
   storage: createStorage({
     storage: cookieStorage,
   }),
+  chains: [sepolia],
   ssr: true,
   projectId,
   networks,

@@ -14,6 +14,7 @@ import RetroGrid from "@/components/magicui/retro-grid";
 import { atom, useAtom } from "jotai";
 import { AVAILABLE_HOOKS } from "@/constants";
 import { Hook } from "../../../types";
+import { useCreatePool } from "../../../hooks/useCreatePool";
 
 const tokenAddressAtom = atom("");
 
@@ -29,9 +30,23 @@ export default function CreatePage() {
   const [amount2, setAmount2] = useAtom(amount2Atom);
   const [amount3, setAmount3] = useAtom(amount3Atom);
 
-  const handleSubmit = useCallback((e: any) => {
-    e.preventDefault();
-  }, []);
+  const { createPool } = useCreatePool();
+
+  const handleSubmit = useCallback(
+    (e: any) => {
+      e.preventDefault();
+
+      if (!selectedHook) return;
+
+      createPool(selectedHook, {
+        tokenAddress,
+        amount1,
+        amount2,
+        amount3,
+      });
+    },
+    [createPool, selectedHook, tokenAddress, amount1, amount2, amount3]
+  );
 
   return (
     <div className="relative min-h-screen flex items-center justify-center text-black overflow-hidden">
