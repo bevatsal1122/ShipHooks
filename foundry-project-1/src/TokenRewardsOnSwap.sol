@@ -21,7 +21,7 @@ struct PoolConfig {
     int24 rewardTokenAmount;
 }
 
-contract TokenGated is BaseHook {
+contract TokenGated is BaseHook, Constants {
     using PoolIdLibrary for PoolKey;
 
     address USDCToken = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238;
@@ -90,8 +90,8 @@ contract TokenGated is BaseHook {
     ) external {
         PoolId poolId = key.toId();
         pools[poolId].tokenAddress = _tokenAddress;
-        pools[poolId].rewardsTokenStockAddress = __rewardsTokenStockAddress;
-        pools[poolId].minimumQualificationAmount = _minimumQualificationAmount;
+        pools[poolId].vault = __rewardsTokenStockAddress;
+        pools[poolId].requiredLimit = _minimumQualificationAmount;
         pools[poolId].rewardTokenAmount = _rewardTokenAmount;
     }
 
