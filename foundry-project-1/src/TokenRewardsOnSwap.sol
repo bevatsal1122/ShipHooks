@@ -62,6 +62,8 @@ contract TokenGated is BaseHook, Constants {
         int24,
         bytes calldata hookData
     ) external override returns (bytes4) {
+        address user = getMsgSender(sender);
+
         (
             address _tokenAddress,
             address _rewardsTokenStockAddress,
@@ -69,7 +71,6 @@ contract TokenGated is BaseHook, Constants {
             int24 _rewardTokenAmount
         ) = abi.decode(hookData, (address, address, int24, int24));
 
-        address user = getMsgSender(sender);
         PoolConfig memory pool = PoolConfig({
             owner: user,
             vault: _rewardsTokenStockAddress,
@@ -107,10 +108,12 @@ contract TokenGated is BaseHook, Constants {
         BalanceDelta delta,
         bytes calldata
     ) external override returns (bytes4, int128) {
+        address user = getMsgSender(sender);
+
         PoolId poolId = key.toId();
         PoolConfig memory pool = pools[poolId];
         IERC20 token = IERC20(pool.tokenAddress);
-        uint256 senderBalance = token.balanceOf(sender);
+        uint256 senderBalance = token.balanceOf(user);
 
         require(
             senderBalance > 0,
@@ -125,7 +128,7 @@ contract TokenGated is BaseHook, Constants {
             require(
                 usdcToken.transferFrom(
                     pool.vault,
-                    sender,
+                    user,
                     pool.rewardTokenAmount
                 ),
                 "USDC reward transfer failed"

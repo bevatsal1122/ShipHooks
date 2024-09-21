@@ -77,7 +77,7 @@ contract ERC721ReducedFeesHook is BaseHook {
         PoolKey calldata key,
         IPoolManager.SwapParams calldata,
         bytes calldata
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+    ) external view override returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
         PoolConfig memory pool = pools[poolId];
 
