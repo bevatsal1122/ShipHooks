@@ -16,5 +16,8 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.2",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+  },
+  "dependencies": {
+    "solmate": "^6.2.0"
   }
 }
