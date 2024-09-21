@@ -37,7 +37,7 @@ contract TokenReducedFees is BaseHook {
                 afterInitialize: true,
                 beforeAddLiquidity: false,
                 afterAddLiquidity: false,
-                beforeRemoveLiquidity: true,
+                beforeRemoveLiquidity: false,
                 afterRemoveLiquidity: false,
                 beforeSwap: true,
                 afterSwap: false,
