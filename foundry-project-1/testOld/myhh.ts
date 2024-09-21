@@ -1,5 +1,6 @@
-import { expect } from "chai";
-import hre, { ethers } from "hardhat";
+const { expect } = require("chai");
+const { ethers } = require("ethers");
+const hre = require("hardhat");
 
 describe("Counter", function () {
   it("Should set the right unlockTime", async function () {
