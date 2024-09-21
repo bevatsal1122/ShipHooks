@@ -21,7 +21,7 @@ struct PoolConfig {
     uint256 rewardTokenAmount;
 }
 
-contract TokenGated is BaseHook, Constants {
+contract TokenRewardsOnSwap is BaseHook, Constants {
     using PoolIdLibrary for PoolKey;
 
     // Ethereum Sepolia

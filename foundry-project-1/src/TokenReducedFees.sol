@@ -12,7 +12,6 @@ import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/type
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {LPFeeLibrary} from "@uniswap/v4-core/src/libraries/LPFeeLibrary.sol";
 import "./Constants.sol";
-import "./IUniversalRouter.sol";
 
 struct PoolConfig {
     address tokenAddress;

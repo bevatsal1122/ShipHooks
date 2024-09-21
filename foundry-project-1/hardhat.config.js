@@ -4,4 +4,10 @@ require("@nomicfoundation/hardhat-foundry");
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: "0.8.27",
+  networks: {
+    sepolia: {
+      accounts: ['0x' + "7fae503cb9b1b75d4a62b92283b27fcaf4a4c9170b41aabf1022321a31d80aa5"],
+      url: "https://eth-sepolia.g.alchemy.com/v2/s7T31oPGrY_VrwLVwRtcfCLO9Ag-7D4U"
+    }
+  }
 };
