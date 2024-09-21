@@ -4,7 +4,7 @@ layout: home
 
 hero:
   name: "ShipHooks"
-  text: "OpenZeppelin-style Hooks for uniswap"
+  text: "OpenZeppelin-style Hooks for Uniswap"
   tagline: Streamline your DeFi development with our collection of Uniswap hooks
   actions:
     - theme: brand
