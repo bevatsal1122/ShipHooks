@@ -10,9 +10,7 @@ import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
-import {console} from "forge-std/console.sol";
 import "./Constants.sol";
-import "./IUniversalRouter.sol";
 
 struct PoolConfig {
     address tokenAddress;
@@ -21,7 +19,7 @@ struct PoolConfig {
     mapping(address => bool) hasMintedNFT;
 }
 
-contract TokenGatedNFT is BaseHook, Constants, ERC721 {
+contract MembershipMinter is BaseHook, Constants, ERC721 {
     using PoolIdLibrary for PoolKey;
 
     mapping(PoolId => PoolConfig) public pools;
@@ -65,7 +63,7 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
         int24,
         bytes calldata hookData
     ) external override returns (bytes4) {
-        address user = getMsgSender(sender);
+        address user = sender;
         (address _tokenAddress, uint256 _minTokenAmount) = abi.decode(
             hookData,
             (address, uint256)
@@ -94,7 +92,6 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
                 _mintNFT(user);
             }
         }
-
         return BaseHook.afterAddLiquidity.selector;
     }
 
@@ -117,10 +114,6 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
     function calculateLiquidityValueUSD(
         BalanceDelta delta
     ) internal pure returns (uint256) {
-        // This is a placeholder implementation. In a real-world scenario, you would need to:
-        // 1. Get the current price of both tokens in the pool
-        // 2. Calculate the USD value of the liquidity added
-        // For simplicity, we'll assume 1 token = 1 USD here
         return
             uint256(
                 uint128(int128(delta.amount0())) +
