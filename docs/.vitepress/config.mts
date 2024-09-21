@@ -28,6 +28,7 @@ export default defineConfig({
           { text: "NFT-Gated Swap", link: "/hooks/nft-gated-swap" },
           { text: "NFT-based Reduced Fees", link: "/hooks/nft-reduced-fees" },
           { text: "Token Rewards on Swap", link: "/hooks/token-rewards" },
+          { text: "NFT on Adding Liquidity (One-time)", link: "/hooks/nft-on-add-liquidity" },
         ],
       },
       {
