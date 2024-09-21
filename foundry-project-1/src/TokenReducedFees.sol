@@ -10,6 +10,8 @@ import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {LPFeeLibrary} from "@uniswap/v4-core/src/libraries/LPFeeLibrary.sol";
+import "./Constants.sol";
 
 struct PoolConfig {
     address tokenAddress;
@@ -25,7 +27,7 @@ contract TokenReducedFees is BaseHook {
 
     constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
-    function ping() public returns (string memory) {
+    function ping() public pure returns (string memory) {
         return "pong";
     }
 
@@ -65,12 +67,14 @@ contract TokenReducedFees is BaseHook {
         int24,
         bytes calldata hookData
     ) external override returns (bytes4) {
+        address user = getMsgSender(sender);
+        
         (uint24 _regularFees, uint24 _reducedFees, address _tokenAddress) = abi
             .decode(hookData, (uint24, uint24, address));
-            
+
         PoolConfig memory pool = PoolConfig({
             tokenAddress: _tokenAddress,
-            owner: sender,
+            owner: user,
             regularFees: _regularFees,
             reducedFees: _reducedFees
         });
@@ -96,7 +100,9 @@ contract TokenReducedFees is BaseHook {
         PoolKey calldata key,
         IPoolManager.SwapParams calldata,
         bytes calldata
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+    ) external view override returns (bytes4, BeforeSwapDelta, uint24) {
+        address user = getMsgSender(sender);
+
         PoolId poolId = key.toId();
 
         PoolConfig memory pool = pools[poolId];
@@ -108,14 +114,13 @@ contract TokenReducedFees is BaseHook {
             return (
                 BaseHook.beforeSwap.selector,
                 BeforeSwapDeltaLibrary.ZERO_DELTA,
-                pool.reducedFees
+                pool.reducedFees | LPFeeLibrary.OVERRIDE_FEE_FLAG
             );
         } else {
             return (
                 BaseHook.beforeSwap.selector,
                 BeforeSwapDeltaLibrary.ZERO_DELTA,
-                // toBalanceDelta(1, 2),
-                pool.regularFees
+                pool.regularFees | LPFeeLibrary.OVERRIDE_FEE_FLAG
             );
         }
     }
