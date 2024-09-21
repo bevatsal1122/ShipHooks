@@ -56,7 +56,7 @@ contract TokenGated is BaseHook {
         int24,
         bytes calldata hookData
     ) external override returns (bytes4) {
-        ( address _tokenAddress ) = abi.decode(hookData, (address));
+        address _tokenAddress = abi.decode(hookData, (address));
         PoolConfig memory pool = PoolConfig({
             tokenAddress: _tokenAddress,
             owner: sender
@@ -65,7 +65,6 @@ contract TokenGated is BaseHook {
         pools[poolId] = pool;
         return BaseHook.afterInitialize.selector;
     }
-
 
     function setPoolConfig(
         PoolKey calldata key,
@@ -86,12 +85,13 @@ contract TokenGated is BaseHook {
         PoolConfig memory pool = pools[poolId];
 
         IERC20 token = IERC20(pool.tokenAddress);
+
+        // address sender1 = 0xB21B95E4343242Ed55be7E9ce34C9F2Bc97B4b09;
+
         uint256 senderBalance = token.balanceOf(sender);
 
-        console.log("sender");
-        console.log(msg.sender);
-        console.log("tokenAddress");
-        console.log(pool.tokenAddress);
+        console.log("Sender balance");
+        console.log(senderBalance);
 
         require(
             senderBalance > 0,
