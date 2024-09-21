@@ -3,28 +3,59 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import RetroGrid from "@/components/magicui/retro-grid";
+import { atom, useAtom } from "jotai";
 
 const AVAILABLE_HOOKS = [
-  { id: "approve", name: "Approve", requiresAmount: true },
-  { id: "transfer", name: "Transfer", requiresAmount: true },
-  { id: "balanceOf", name: "Balance Of", requiresAmount: false },
-  { id: "totalSupply", name: "Total Supply", requiresAmount: false },
+  {
+    id: "token-gate",
+    name: "Token Required",
+  },
+  {
+    id: "discounted-fee",
+    name: "Discounted Fee for Holders",
+    requiresAmount1: true,
+    requiresAmount2: true,
+    amountLabel: "Regular Fee",
+    amountLabel2: "Reduced Fee",
+  },
+  { id: "nft-gate", name: "NFT Required", requiresAmount1: false },
+  {
+    id: "nft-discounted-fee",
+    name: "NFT holders get discount on Fee",
+    requiresAmount1: true,
+    requiresAmount2: true,
+    amountLabel: "Regular Fee",
+    amountLabel2: "Reduced Fee",
+  },
 ];
 
-export default function Component() {
-  const [selectedHook, setSelectedHook] = useState<any>(null);
-  const [tokenAddress, setTokenAddress] = useState("");
-  const [amount, setAmount] = useState("");
+const amount1Atom = atom("");
+const amount2Atom = atom("");
+const tokenAddressAtom = atom("");
 
+export default function CreatePage() {
+  const [selectedHook, setSelectedHook] = useState<
+    (typeof AVAILABLE_HOOKS)[number] | null
+  >(null);
+
+  const [tokenAddress, setTokenAddress] = useAtom(tokenAddressAtom);
+  const [amount1, setAmount1] = useAtom(amount1Atom);
+  const [amount2, setAmount2] = useAtom(amount2Atom);
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
     console.log("Selected Hook:", selectedHook);
     console.log("Token Address:", tokenAddress);
-    if (selectedHook && selectedHook.requiresAmount) {
-      console.log("Amount:", amount);
+    if (selectedHook && selectedHook.requiresAmount1) {
+      console.log("Amount:", amount1);
     }
 
     // Here you would typically handle the submission, e.g., calling an API
@@ -36,14 +67,19 @@ export default function Component() {
       <div className="relative z-10 w-full max-w-2xl p-8 space-y-8">
         <h1 className="text-6xl font-extrabold text-center text-black mb-12 tracking-tight">
           Choose your{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">hook</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+            hook
+          </span>
         </h1>
         <form
           onSubmit={handleSubmit}
           className="bg-black backdrop-blur-xl rounded-2xl p-8 space-y-6 border border-gray-800 shadow-2xl"
         >
           <div className="space-y-4">
-            <label htmlFor="hook-select" className="text-lg font-medium text-gray-300">
+            <label
+              htmlFor="hook-select"
+              className="text-lg font-medium text-gray-300"
+            >
               Select Hook
             </label>
             <Select
@@ -51,15 +87,23 @@ export default function Component() {
                 const hook = AVAILABLE_HOOKS.find((hook) => hook.id === value);
                 setSelectedHook(hook || null);
                 setTokenAddress("");
-                setAmount("");
+                setAmount1("");
+                setAmount2("");
               }}
             >
-              <SelectTrigger id="hook-select" className="w-full bg-gray-800 border-gray-700 text-white h-12 rounded-xl">
+              <SelectTrigger
+                id="hook-select"
+                className="w-full bg-gray-800 border-gray-700 text-white h-12 rounded-xl"
+              >
                 <SelectValue placeholder="Choose a hook" />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-700">
                 {AVAILABLE_HOOKS.map((hook) => (
-                  <SelectItem key={hook.id} value={hook.id} className="text-white">
+                  <SelectItem
+                    key={hook.id}
+                    value={hook.id}
+                    className="text-white"
+                  >
                     {hook.name}
                   </SelectItem>
                 ))}
@@ -69,7 +113,10 @@ export default function Component() {
 
           {selectedHook && (
             <div className="space-y-4 transition-all duration-300">
-              <label htmlFor="token-address" className="text-lg font-medium text-gray-300">
+              <label
+                htmlFor="token-address"
+                className="text-lg font-medium text-gray-300"
+              >
                 Token Address
               </label>
               <Input
@@ -83,17 +130,39 @@ export default function Component() {
             </div>
           )}
 
-          {selectedHook?.requiresAmount && (
+          {selectedHook?.requiresAmount1 && (
             <div className="space-y-4 transition-all duration-300">
-              <label htmlFor="amount" className="text-lg font-medium text-gray-300">
-                Amount
+              <label
+                htmlFor="amount"
+                className="text-lg font-medium text-gray-300"
+              >
+                {selectedHook.amountLabel || "Amount"}
               </label>
               <Input
                 id="amount"
                 type="number"
                 placeholder="Enter amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={amount1}
+                onChange={(e) => setAmount1(e.target.value)}
+                className="bg-gray-800 border-gray-700 text-white text-xl h-12 rounded-xl"
+              />
+            </div>
+          )}
+
+          {selectedHook?.requiresAmount2 && (
+            <div className="space-y-4 transition-all duration-300">
+              <label
+                htmlFor="amount"
+                className="text-lg font-medium text-gray-300"
+              >
+                {selectedHook.amountLabel2 || "Amount"}
+              </label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="Enter amount"
+                value={amount2}
+                onChange={(e) => setAmount2(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white text-xl h-12 rounded-xl"
               />
             </div>
@@ -110,7 +179,8 @@ export default function Component() {
           )}
         </form>
         <p className="text-center text-base text-gray-400 mt-6">
-          Select a hook, provide the required information, and submit to interact with the blockchain.
+          Select a hook, provide the required information, and submit to
+          interact with the blockchain.
         </p>
       </div>
     </div>
