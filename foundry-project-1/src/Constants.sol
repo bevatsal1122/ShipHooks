@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import './IUniversalRouter.sol';
 
 contract Constants {
-    address public constant UNIVERSAL_ROUTER = 0x927038542746c06F1b2F7F550a3c90AEBdDa4E85; // On "Base Sepolia"
+    address public constant UNIVERSAL_ROUTER = 0x95273d871c8156636e114b63797d78D7E1720d81; // On "Ethereum Sepolia"
 
     function getMsgSender(address sender) public view returns (address) {
         return IUniversalRouter(sender).msgSender();
