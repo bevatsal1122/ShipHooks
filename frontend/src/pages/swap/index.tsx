@@ -13,7 +13,7 @@ import {
 import { ArrowDownIcon } from "lucide-react";
 import RetroGrid from "@/components/magicui/retro-grid";
 import { useSwapState } from "../../../hooks/useSwapState";
-import { AVAILABLE_TOKENS } from "../../../constants";
+import { AVAILABLE_TOKENS } from "../../constants/constants";
 
 export default function SwapPage() {
   const {

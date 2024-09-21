@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,46 +12,9 @@ import {
 } from "@/components/ui/select";
 import RetroGrid from "@/components/magicui/retro-grid";
 import { atom, useAtom } from "jotai";
+import { AVAILABLE_HOOKS } from "@/constants";
 
-const AVAILABLE_HOOKS = [
-  {
-    id: "token-gate",
-    name: "Token Required",
-  },
-  {
-    id: "discounted-fee",
-    name: "Discounted Fee for Holders",
-    requiresAmount1: true,
-    requiresAmount2: true,
-    amountLabel: "Regular Fee",
-    amountLabel2: "Reduced Fee",
-  },
-  { id: "nft-gate", name: "NFT Required", requiresAmount1: false },
-  {
-    id: "nft-discounted-fee",
-    name: "NFT holders get discount on Fee",
-    requiresAmount1: true,
-    requiresAmount2: true,
-    amountLabel: "Regular Fee",
-    amountLabel2: "Reduced Fee",
-  },
-  {
-    id: "token-rewards-swap",
-    name: "Token Rewards on Swap",
-    requiresAmount1: true,
-    requiresAmount2: true,
-    requiresAmount3: true,
-    amountLabel: "Token distributor Address", // should have given enough allowance to the hook smart contract.
-    amountLabel2: "Minimum Swap Amount",
-    amountLabel3: "Reward Token Amount",
-  },
-  {
-    id: "nft-on-add-liquidity",
-    name: "One-time NFT on Adding Liquidity",
-    requiresAmount1: true,
-    amountLabel: "Minimum LP tokens in Transaction"
-  }
-];
+
 
 const tokenAddressAtom = atom("");
 
@@ -69,14 +32,9 @@ export default function CreatePage() {
   const [amount2, setAmount2] = useAtom(amount2Atom);
   const [amount3, setAmount3] = useAtom(amount3Atom);
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = useCallback((e: any) => {
     e.preventDefault();
-    console.log("Selected Hook:", selectedHook);
-    console.log("Token Address:", tokenAddress);
-    if (selectedHook && selectedHook.requiresAmount1) {
-      console.log("Amount:", amount1);
-    }
-  };
+  }, []);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center text-black overflow-hidden">

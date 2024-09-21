@@ -1,5 +1,5 @@
 import { atom, useAtom } from "jotai";
-import { AVAILABLE_TOKENS } from "../constants";
+import { AVAILABLE_TOKENS } from "../src/constants/constants";
 
 const token0Atom = atom(AVAILABLE_TOKENS[0]);
 const token1Atom = atom(AVAILABLE_TOKENS[1]);
