@@ -10,12 +10,10 @@ import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import "./Constants.sol";
-import "./IUniversalRouter.sol";
 
 struct PoolConfig {
     address nftAddress;
     address owner;
-    uint256 requiredNFTBalance;
 }
 
 contract NFTGated is BaseHook, Constants {
@@ -57,29 +55,20 @@ contract NFTGated is BaseHook, Constants {
         int24,
         bytes calldata hookData
     ) external override returns (bytes4) {
-        address user = getMsgSender(sender);
-        (address _nftAddress, uint256 _requiredNFTBalance) = abi.decode(
-            hookData,
-            (address, uint256)
-        );
+        address user = sender;
+        address _nftAddress = abi.decode(hookData, (address));
         PoolConfig memory pool = PoolConfig({
             nftAddress: _nftAddress,
-            owner: user,
-            requiredNFTBalance: _requiredNFTBalance
+            owner: user
         });
         PoolId poolId = key.toId();
         pools[poolId] = pool;
         return BaseHook.afterInitialize.selector;
     }
 
-    function setPoolConfig(
-        PoolKey calldata key,
-        address _nftAddress,
-        uint256 _requiredNFTBalance
-    ) external {
+    function setPoolConfig(PoolKey calldata key, address _nftAddress) external {
         PoolId poolId = key.toId();
         pools[poolId].nftAddress = _nftAddress;
-        pools[poolId].requiredNFTBalance = _requiredNFTBalance;
     }
 
     function beforeSwap(
@@ -98,10 +87,7 @@ contract NFTGated is BaseHook, Constants {
 
         uint256 senderNFTBalance = nft.balanceOf(user);
 
-        require(
-            senderNFTBalance >= pool.requiredNFTBalance,
-            "Swap denied: insufficient NFT balance"
-        );
+        require(senderNFTBalance > 0, "Swap denied: insufficient NFT balance");
 
         return (
             BaseHook.beforeSwap.selector,

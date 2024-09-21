@@ -62,8 +62,6 @@ contract TokenGatedTest is Test, Fixtures {
 
         deployAndApprovePosm(manager);
 
-        // // Deploy a test ERC20 token
-
         // Deploy the hook to an address with the correct flags
         address flags = address(
             uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_INITIALIZE_FLAG) ^
