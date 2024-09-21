@@ -1,0 +1,20 @@
+{
+  "name": "foundry-project-1",
+  "version": "1.0.0",
+  "description": "[`Use this Template`](https://github.com/uniswapfoundation/v4-template/generate)",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.2",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+  }
+}

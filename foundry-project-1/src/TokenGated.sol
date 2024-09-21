@@ -10,7 +10,6 @@ import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {console} from "forge-std/console.sol";
 
 struct PoolConfig {
     address tokenAddress;
@@ -89,9 +88,6 @@ contract TokenGated is BaseHook {
         // address sender1 = 0xB21B95E4343242Ed55be7E9ce34C9F2Bc97B4b09;
 
         uint256 senderBalance = token.balanceOf(sender);
-
-        console.log("Sender balance");
-        console.log(senderBalance);
 
         require(
             senderBalance > 0,
