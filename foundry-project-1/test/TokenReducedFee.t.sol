@@ -19,7 +19,7 @@ import {IPositionManager} from "v4-periphery/src/interfaces/IPositionManager.sol
 import {EasyPosm} from "./utils/EasyPosm.sol";
 import {Fixtures} from "./utils/Fixtures.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import { console} from "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 struct poolConfig {
     address tokenAddress;
@@ -41,7 +41,9 @@ contract TokenReducedFeesTest is Test, Fixtures {
     int24 tickLower;
     int24 tickUpper;
 
-    IERC20 public testToken;
+    // IERC20 public testToken;
+    address testToken = 0x7A7DEBcbAFC5aBC0E54b848D6FAE28b43202adC8;
+
     address public user1;
     address public user2;
 
@@ -58,8 +60,6 @@ contract TokenReducedFeesTest is Test, Fixtures {
         deployAndApprovePosm(manager);
 
         // Deploy a test ERC20 token
-        // testToken = IERC20(deployCode("mUSDC.sol:MockUSDC"));
-        address testToken = 0x7A7DEBcbAFC5aBC0E54b848D6FAE28b43202adC8;
 
         // Deploy the hook to an address with the correct flags
         address flags = address(
@@ -77,11 +77,7 @@ contract TokenReducedFeesTest is Test, Fixtures {
         // Create the pool
         key = PoolKey(currency0, currency1, 3000, 60, IHooks(hook));
         poolId = key.toId();
-        bytes memory initData = abi.encode(
-            REGULAR_FEE,
-            REDUCED_FEE,
-            testToken
-        );
+        bytes memory initData = abi.encode(REGULAR_FEE, REDUCED_FEE, testToken);
         manager.initialize(key, SQRT_PRICE_1_1, initData);
 
         // Provide full-range liquidity to the pool
@@ -121,7 +117,12 @@ contract TokenReducedFeesTest is Test, Fixtures {
     }
 
     function testPoolInitialization() public {
-        (address tokenAddress, address owner, uint24 regularFees, uint24 reducedFees) = hook.pools(poolId);
+        (
+            address tokenAddress,
+            address owner,
+            uint24 regularFees,
+            uint24 reducedFees
+        ) = hook.pools(poolId);
         assertEq(tokenAddress, address(testToken));
         assertEq(regularFees, REGULAR_FEE);
         assertEq(reducedFees, REDUCED_FEE);
@@ -129,7 +130,7 @@ contract TokenReducedFeesTest is Test, Fixtures {
 
     function testReducedFees() public {
         // Swap as user1 (should get reduced fees)
-        vm.startPrank(user1);
+        vm.prank(user1);
         bool zeroForOne = true;
         int256 amountSpecified = -1e18;
         BalanceDelta swapDelta = swap(
@@ -138,7 +139,6 @@ contract TokenReducedFeesTest is Test, Fixtures {
             amountSpecified,
             ZERO_BYTES
         );
-        vm.stopPrank();
 
         // Check that the correct fee was applied
         uint256 actualFee = uint256(
@@ -150,7 +150,7 @@ contract TokenReducedFeesTest is Test, Fixtures {
 
     function testRegularFees() public {
         // Swap as user2 (should get regular fees)
-        vm.startPrank(user2);
+        vm.prank(user2);
         bool zeroForOne = true;
         int256 amountSpecified = -1e18;
         BalanceDelta swapDelta = swap(
@@ -159,7 +159,6 @@ contract TokenReducedFeesTest is Test, Fixtures {
             amountSpecified,
             ZERO_BYTES
         );
-        vm.stopPrank();
 
         // Check that the correct fee was applied
         uint256 actualFee = uint256(
@@ -176,7 +175,12 @@ contract TokenReducedFeesTest is Test, Fixtures {
 
         hook.setPoolConfig(key, newRegularFee, newReducedFee, newTokenAddress);
 
-        (address tokenAddress, address owner, uint24 regularFees, uint24 reducedFees) = hook.pools(poolId);
+        (
+            address tokenAddress,
+            address owner,
+            uint24 regularFees,
+            uint24 reducedFees
+        ) = hook.pools(poolId);
         assertEq(tokenAddress, newTokenAddress);
         assertEq(regularFees, newRegularFee);
         assertEq(reducedFees, newReducedFee);
