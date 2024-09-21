@@ -1,234 +1,137 @@
-// // SPDX-License-Identifier: MIT
-// pragma solidity ^0.8.24;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.24;
 
-// import "forge-std/Test.sol";
-// import "../src/NFTGated.sol";
-// import "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-// import "@uniswap/v4-core/src/types/PoolKey.sol";
-// import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import "forge-std/Test.sol";
+import "../src/NFTGated.sol";
+import "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
+import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 
+contract MockERC721 is ERC721 {
+    constructor() ERC721("MockNFT", "MNFT") {}
 
-// contract MockPoolManager is IPoolManager {
-//     function getSlot0(PoolId poolId) external pure override returns (Slot0) {
-//         // Return a dummy Slot0 struct
-//         return Slot0({
-//             sqrtPriceX96: 0,
-//             tick: 0,
-//             protocolFee: 0,
-//             swapFee: 0,
-//             tickSpacing: 0,
-//             hookData: false,
-//             hookExtraData: 0
-//         });
-//     }
+    function mint(address to, uint256 tokenId) public {
+        _mint(to, tokenId);
+    }
+}
 
-//     // Implement other required functions with minimal functionality
-//     function initialize(PoolKey memory, uint160, bytes calldata) external returns (int24, int24, uint256) {
-//         return (0, 0, 0);
-//     }
+contract NFTGatedTest is Test {
+    NFTGated public hook;
+    IPoolManager public poolManager;
+    MockERC721 public mockNFT;
 
-//     function modifyPosition(PoolKey memory, IPoolManager.ModifyPositionParams memory, bytes calldata) external returns (BalanceDelta) {
-//         return BalanceDelta(0, 0);
-//     }
+    address public alice = address(0x1);
+    address public bob = address(0x2);
 
-//     function swap(PoolKey memory, IPoolManager.SwapParams memory, bytes calldata) external returns (BalanceDelta) {
-//         return BalanceDelta(0, 0);
-//     }
+    function setUp() public {
+        // Deploy a mock pool manager
+        poolManager = IPoolManager(address(new MockPoolManager()));
 
-//     function donate(PoolKey memory, uint256, uint256, bytes calldata) external returns (BalanceDelta) {
-//         return BalanceDelta(0, 0);
-//     }
+        // Deploy the NFTGated hook
+        hook = new NFTGated(poolManager);
 
-//     function take(PoolKey memory, int256, int256, bytes calldata) external returns (BalanceDelta) {
-//         return BalanceDelta(0, 0);
-//     }
+        // Deploy a mock NFT
+        mockNFT = new MockERC721();
+    }
 
-//     function settle(address) external payable returns (BalanceDelta) {
-//         return BalanceDelta(0, 0);
-//     }
+    function testInitializePool() public {
+        PoolKey memory poolKey = PoolKey({
+            currency0: Currency.wrap(address(0x1)),
+            currency1: Currency.wrap(address(0x2)),
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: IHooks(address(hook))
+        });
 
-//     function mint(address, uint256) external {}
+        uint256 requiredNFTBalance = 1;
+        bytes memory hookData = abi.encode(
+            address(mockNFT),
+            requiredNFTBalance
+        );
 
-//     function burn(uint256) external {}
+        vm.prank(alice);
+        hook.afterInitialize(address(this), poolKey, 0, 0, hookData);
 
-//     function transfer(address, uint256) external pure returns (bool) {
-//         return true;
-//     }
+        PoolId poolId = poolKey.toId();
+        (address nftAddress, address owner, uint256 nftBalance) = hook.pools(
+            poolId
+        );
 
-//     function transferFrom(address, address, uint256) external pure returns (bool) {
-//         return true;
-//     }
-// }
+        assertEq(nftAddress, address(mockNFT), "Incorrect NFT address");
+        assertEq(owner, alice, "Incorrect pool owner");
+        assertEq(
+            nftBalance,
+            requiredNFTBalance,
+            "Incorrect required NFT balance"
+        );
+    }
 
-// contract MockNFT is ERC721 {
-//     constructor() ERC721("MockNFT", "MNFT") {}
+    function testBeforeSwapWithSufficientNFTs() public {
+        PoolKey memory poolKey = PoolKey({
+            currency0: Currency.wrap(address(0x1)),
+            currency1: Currency.wrap(address(0x2)),
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: IHooks(address(hook))
+        });
 
-//     function mint(address to, uint256 tokenId) external {
-//         _mint(to, tokenId);
-//     }
-// }
+        uint256 requiredNFTBalance = 1;
+        bytes memory hookData = abi.encode(
+            address(mockNFT),
+            requiredNFTBalance
+        );
 
-// contract NFTGatedTest is Test {
-//     NFTGated public nftGated;
-//     MockPoolManager public mockPoolManager;
-//     MockNFT public mockNFT;
-//     address public owner;
-//     address public user;
+        vm.prank(alice);
+        hook.afterInitialize(address(this), poolKey, 0, 0, hookData);
 
-//     function setUp() public {
-//         owner = address(this);
-//         user = address(0x1);
-//         mockPoolManager = new MockPoolManager();
-//         mockNFT = new MockNFT();
-//         nftGated = new NFTGated(IPoolManager(address(mockPoolManager)));
-//     }
+        // Mint NFT to Bob
+        mockNFT.mint(bob, 1);
 
-//     function testAfterInitialize() public {
-//         PoolKey memory key = PoolKey(
-//             address(0),
-//             address(0),
-//             0,
-//             0,
-//             IHooks(address(0))
-//         );
-//         bytes memory hookData = abi.encode(address(mockNFT), 1);
+        IPoolManager.SwapParams memory params;
+        vm.prank(bob);
+        (bytes4 selector, BeforeSwapDelta delta, uint24 fee) = hook.beforeSwap(
+            address(this),
+            poolKey,
+            params,
+            ""
+        );
 
-//         vm.prank(owner);
-//         nftGated.afterInitialize(address(this), key, 0, 0, hookData);
+        assertEq(
+            selector,
+            NFTGated.beforeSwap.selector,
+            "Incorrect selector returned"
+        );
+        // Add more assertions as needed
+    }
 
-//         PoolId poolId = PoolIdLibrary.toId(key);
-//         (
-//             address nftAddress,
-//             address poolOwner,
-//             uint256 requiredNFTBalance
-//         ) = nftGated.pools(poolId);
+    function testBeforeSwapWithInsufficientNFTs() public {
+        PoolKey memory poolKey = PoolKey({
+            currency0: Currency.wrap(address(0x1)),
+            currency1: Currency.wrap(address(0x2)),
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: IHooks(address(hook))
+        });
 
-//         assertEq(nftAddress, address(mockNFT));
-//         assertEq(poolOwner, owner);
-//         assertEq(requiredNFTBalance, 1);
-//     }
+        uint256 requiredNFTBalance = 1;
+        bytes memory hookData = abi.encode(
+            address(mockNFT),
+            requiredNFTBalance
+        );
 
-//     function testSetPoolConfig() public {
-//         PoolKey memory key = PoolKey(
-//             address(0),
-//             address(0),
-//             0,
-//             0,
-//             IHooks(address(0))
-//         );
+        vm.prank(alice);
+        hook.afterInitialize(address(this), poolKey, 0, 0, hookData);
 
-//         vm.prank(owner);
-//         nftGated.setPoolConfig(key, address(mockNFT), 2);
+        // Don't mint any NFTs to Bob
 
-//         PoolId poolId = PoolIdLibrary.toId(key);
-//         (address nftAddress, , uint256 requiredNFTBalance) = nftGated.pools(
-//             poolId
-//         );
+        IPoolManager.SwapParams memory params;
+        vm.prank(bob);
+        vm.expectRevert("Swap denied: insufficient NFT balance");
+        hook.beforeSwap(address(this), poolKey, params, "");
+    }
+}
 
-//         assertEq(nftAddress, address(mockNFT));
-//         assertEq(requiredNFTBalance, 2);
-//     }
+// Mock contracts and interfaces
 
-//     function testBeforeSwapWithSufficientNFTs() public {
-//         PoolKey memory key = PoolKey(
-//             address(0),
-//             address(0),
-//             0,
-//             0,
-//             IHooks(address(0))
-//         );
-//         bytes memory hookData = abi.encode(address(mockNFT), 1);
-
-//         vm.prank(owner);
-//         nftGated.afterInitialize(address(this), key, 0, 0, hookData);
-
-//         // Mint NFT for the user
-//         mockNFT.mint(user, 1);
-
-//         IPoolManager.SwapParams memory params;
-
-//         vm.prank(user);
-//         (bytes4 selector, BeforeSwapDelta delta, uint24 fee) = nftGated
-//             .beforeSwap(address(this), key, params, "");
-
-//         assertEq(selector, NFTGated.beforeSwap.selector);
-//     }
-
-//     function testBeforeSwapWithInsufficientNFTs() public {
-//         PoolKey memory key = PoolKey(
-//             address(0),
-//             address(0),
-//             0,
-//             0,
-//             IHooks(address(0))
-//         );
-//         bytes memory hookData = abi.encode(address(mockNFT), 1);
-
-//         vm.prank(owner);
-//         nftGated.afterInitialize(address(this), key, 0, 0, hookData);
-
-//         IPoolManager.SwapParams memory params;
-
-//         vm.prank(user);
-//         vm.expectRevert("Swap denied: insufficient NFT balance");
-//         nftGated.beforeSwap(address(this), key, params, "");
-//     }
-
-//     function testBeforeSwapWithHigherRequiredBalance() public {
-//         PoolKey memory key = PoolKey(
-//             address(0),
-//             address(0),
-//             0,
-//             0,
-//             IHooks(address(0))
-//         );
-//         bytes memory hookData = abi.encode(address(mockNFT), 2);
-
-//         vm.prank(owner);
-//         nftGated.afterInitialize(address(this), key, 0, 0, hookData);
-
-//         // Mint only one NFT for the user
-//         mockNFT.mint(user, 1);
-
-//         IPoolManager.SwapParams memory params;
-
-//         vm.prank(user);
-//         vm.expectRevert("Swap denied: insufficient NFT balance");
-//         nftGated.beforeSwap(address(this), key, params, "");
-//     }
-
-//     function testMultiplePoolConfigurations() public {
-//         PoolKey memory key1 = PoolKey(
-//             address(1),
-//             address(2),
-//             0,
-//             0,
-//             IHooks(address(0))
-//         );
-//         PoolKey memory key2 = PoolKey(
-//             address(3),
-//             address(4),
-//             0,
-//             0,
-//             IHooks(address(0))
-//         );
-
-//         bytes memory hookData1 = abi.encode(address(mockNFT), 1);
-//         bytes memory hookData2 = abi.encode(address(mockNFT), 2);
-
-//         vm.prank(owner);
-//         nftGated.afterInitialize(address(this), key1, 0, 0, hookData1);
-
-//         vm.prank(owner);
-//         nftGated.afterInitialize(address(this), key2, 0, 0, hookData2);
-
-//         PoolId poolId1 = PoolIdLibrary.toId(key1);
-//         PoolId poolId2 = PoolIdLibrary.toId(key2);
-
-//         (, , uint256 requiredNFTBalance1) = nftGated.pools(poolId1);
-//         (, , uint256 requiredNFTBalance2) = nftGated.pools(poolId2);
-
-//         assertEq(requiredNFTBalance1, 1);
-//         assertEq(requiredNFTBalance2, 2);
-//     }
-// }
+contract MockPoolManager {
+    // Add necessary functions to mock IPoolManager
+}

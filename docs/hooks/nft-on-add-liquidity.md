@@ -1,3 +1,11 @@
+# NFT on Add Liquidity (One-time)
+
+This Membership NFT hook helps you reward your liquidity providers by awarding them an NFT the first time
+they add liquidity to their pool.
+
+## Usage
+
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
@@ -128,3 +136,4 @@ contract TokenGatedNFT is BaseHook, Constants, ERC721 {
             );
     }
 }
+```

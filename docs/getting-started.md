@@ -1,15 +1,13 @@
-# docs/getting-started.md
-
 # Getting Started
 
-Welcome to the Uniswap Hooks Integration documentation. This guide will help you get started with integrating Uniswap hooks into your platform.
+Welcome to the Uniswap Hooks Integration documentation. This guide will help you get started with integrating ShipHooks into your platform.
 
 ## Prerequisites
 
 Before you begin, make sure you have the following installed:
 
-- Node.js (version 14 or higher)
-- npm or yarn
+- NodeJS (version 18 or higher)
+- npm, yarn or pnpm
 
 ## Installation
 
@@ -27,14 +25,5 @@ yarn add @your-org/uniswap-hooks
 
 ## Basic Usage
 
-Here's a simple example of how to use a Uniswap hook in your project:
-
-```javascript
-import { useSwap } from "@your-org/uniswap-hooks";
-
-function SwapComponent() {
-  const { swap, loading, error } = useSwap();
-
-  // Your component logic here
-}
-```
+You can simply copy the code straight into your project **or** use our deployed hooks directly
+in your pool creation process on Uniswap!
