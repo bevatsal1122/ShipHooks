@@ -10,17 +10,21 @@ import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import "./Constants.sol";
+import "./IUniversalRouter.sol";
 
 struct PoolConfig {
     address tokenAddress;
     address owner;
-    address rewardsTokenStockAddress;
-    int24 minimumQualificationAmount;
+    address vault;
+    int24 requiredLimit;
     int24 rewardTokenAmount;
 }
 
 contract TokenGated is BaseHook {
     using PoolIdLibrary for PoolKey;
+
+    address USDCToken = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238;
 
     mapping(PoolId => PoolConfig) public pools;
 
@@ -58,12 +62,17 @@ contract TokenGated is BaseHook {
         int24,
         bytes calldata hookData
     ) external override returns (bytes4) {
-        (address _tokenAddress, address _rewardsTokenStockAddress, int24 _minimumQualificationAmount, int24 _rewardTokenAmount) = abi.decode(hookData, (address, address, int24, int24));
+        (
+            address _tokenAddress,
+            address _rewardsTokenStockAddress,
+            int24 _minimumQualificationAmount,
+            int24 _rewardTokenAmount
+        ) = abi.decode(hookData, (address, address, int24, int24));
         address user = getMsgSender(sender);
         PoolConfig memory pool = PoolConfig({
             owner: sender,
-            rewardsTokenStockAddress: _rewardsTokenStockAddress,
-            minimumQualificationAmount: _minimumQualificationAmount,
+            vault: _rewardsTokenStockAddress,
+            requiredLimit: _minimumQualificationAmount,
             rewardTokenAmount: _rewardTokenAmount,
             tokenAddress: _tokenAddress
         });
@@ -77,12 +86,12 @@ contract TokenGated is BaseHook {
         address _tokenAddress,
         address __rewardsTokenStockAddress,
         int24 _minimumQualificationAmount,
-        int24 _rewardTokenAmount 
+        int24 _rewardTokenAmount
     ) external {
         PoolId poolId = key.toId();
         pools[poolId].tokenAddress = _tokenAddress;
         pools[poolId].rewardsTokenStockAddress = __rewardsTokenStockAddress;
-        pools[poolId].minimumQualificationAmount =_minimumQualificationAmount;
+        pools[poolId].minimumQualificationAmount = _minimumQualificationAmount;
         pools[poolId].rewardTokenAmount = _rewardTokenAmount;
     }
 
@@ -90,7 +99,7 @@ contract TokenGated is BaseHook {
         address sender,
         PoolKey calldata key,
         IPoolManager.SwapParams calldata,
-        BalanceDelta,
+        BalanceDelta delta,
         bytes calldata
     ) external override returns (bytes4, int128) {
         PoolId poolId = key.toId();
@@ -102,6 +111,22 @@ contract TokenGated is BaseHook {
             senderBalance > 0,
             "Swap denied: sender has zero token balance"
         );
+
+        uint256 swapAmount = uint256(
+            delta.amount0() > 0 ? delta.amount0() : delta.amount1()
+        );
+        if (swapAmount >= pool.requiredLimit) {
+            IERC20 usdcToken = IERC20(USDCToken);
+
+            require(
+                usdcToken.transferFrom(
+                    pool.vault,
+                    sender,
+                    pool.rewardTokenAmount
+                ),
+                "USDC reward transfer failed"
+            );
+        }
 
         return (BaseHook.afterSwap.selector, pool.rewardTokenAmount);
     }
