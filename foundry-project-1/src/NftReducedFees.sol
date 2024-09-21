@@ -105,7 +105,7 @@ contract ERC721ReducedFeesHook is BaseHook {
         IPoolManager.SwapParams calldata,
         BalanceDelta,
         bytes calldata
-    ) external override returns (bytes4, int128) {
+    ) external pure override returns (bytes4, int128) {
         return (BaseHook.afterSwap.selector, 0);
     }
 
@@ -114,7 +114,7 @@ contract ERC721ReducedFeesHook is BaseHook {
         PoolKey calldata,
         IPoolManager.ModifyLiquidityParams calldata,
         bytes calldata
-    ) external override returns (bytes4) {
+    ) external pure override returns (bytes4) {
         return BaseHook.beforeAddLiquidity.selector;
     }
 
@@ -123,7 +123,7 @@ contract ERC721ReducedFeesHook is BaseHook {
         PoolKey calldata,
         IPoolManager.ModifyLiquidityParams calldata,
         bytes calldata
-    ) external override returns (bytes4) {
+    ) external pure override returns (bytes4) {
         return BaseHook.beforeRemoveLiquidity.selector;
     }
 }
