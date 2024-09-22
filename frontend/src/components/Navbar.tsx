@@ -10,7 +10,7 @@ const Navbar = () => {
     { name: "Home", path: "/" },
     { name: "Create", path: "/create" },
     { name: "Swap", path: "/swap" },
-    { name: "Docs", path: "/", isExternal: true },
+    { name: "Docs", path: "https://shiphooks.surge.sh", isExternal: true },
   ];
 
   return (
