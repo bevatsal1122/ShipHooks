@@ -66,7 +66,7 @@ export const useCreatePool = () => {
           }
         }
 
-        const hookData = encodePacked(["bytes"], [initialHookData]);
+        const hookData = encodePacked(["bytes32"], [initialHookData]);
         // const hookData = encodeAbiParameters([''])
 
         writeContractAsync({
